@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { useAuth }  from "../context/AuthContext";
-import SelecteurTheme from "./SelecteurTheme";
+import { useAuth }        from "../context/AuthContext";
+import SelecteurTheme     from "./SelecteurTheme";
 
 function NavItem({ to, icone, label, roles, aLeRole }) {
   if (roles && !aLeRole(...roles)) return null;
@@ -16,11 +16,6 @@ export default function Layout() {
   const { utilisateur, deconnecter, aLeRole } = useAuth();
   const navigate = useNavigate();
 
-  const handleDeconnexion = () => {
-    deconnecter();
-    navigate("/login");
-  };
-
   return (
     <div className="app-layout">
       <aside className="sidebar">
@@ -30,18 +25,18 @@ export default function Layout() {
         </div>
 
         <nav className="sidebar-nav">
-          <NavItem to="/"              icone="📊" label="Tableau de bord"
+          <NavItem to="/"             icone="📊" label="Tableau de bord"
             roles={["ADMIN","SECRETAIRE"]} aLeRole={aLeRole} />
-          <NavItem to="/etudiants"     icone="👨‍🎓" label="Étudiants"   aLeRole={aLeRole} />
-          <NavItem to="/paiements"     icone="💰" label="Paiements"    aLeRole={aLeRole} />
-          <NavItem to="/specialites"   icone="📚" label="Spécialités"  aLeRole={aLeRole} />
-          <NavItem to="/import"        icone="📥" label="Import Excel"
+          <NavItem to="/etudiants"    icone="👨‍🎓" label="Étudiants"    aLeRole={aLeRole} />
+          <NavItem to="/paiements"    icone="💰" label="Paiements"     aLeRole={aLeRole} />
+          <NavItem to="/specialites"  icone="📚" label="Spécialités"   aLeRole={aLeRole} />
+          <NavItem to="/qrcodes"      icone="🔲" label="QR Codes"      aLeRole={aLeRole} />
+          <NavItem to="/import"       icone="📥" label="Import Excel"
             roles={["ADMIN","SECRETAIRE"]} aLeRole={aLeRole} />
-          <NavItem to="/utilisateurs"  icone="👥" label="Utilisateurs"
+          <NavItem to="/utilisateurs" icone="👥" label="Utilisateurs"
             roles={["ADMIN"]}             aLeRole={aLeRole} />
         </nav>
 
-        {/* Sélecteur de thème dans la sidebar */}
         <div className="sidebar-theme">
           <span className="sidebar-theme-label">Thème</span>
           <SelecteurTheme compact />
@@ -52,7 +47,9 @@ export default function Layout() {
             <div className="user-nom">{utilisateur?.nom}</div>
             <div className="user-role">{utilisateur?.role}</div>
           </div>
-          <button className="btn-deconnexion" onClick={handleDeconnexion} title="Se déconnecter">
+          <button className="btn-deconnexion"
+            onClick={() => { deconnecter(); navigate("/login"); }}
+            title="Se déconnecter">
             🚪
           </button>
         </div>

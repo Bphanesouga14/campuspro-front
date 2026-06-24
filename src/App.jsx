@@ -11,11 +11,10 @@ import Paiements    from "./pages/Paiements";
 import Specialites  from "./pages/Specialites";
 import Import       from "./pages/Import";
 import Utilisateurs from "./pages/Utilisateurs";
+import QRCodes      from "./pages/QRCodes";
 
 export default function App() {
   return (
-    // ThemeProvider en premier : gère le thème pour toute l'app
-    // (y compris la page Login avant connexion)
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
@@ -29,11 +28,12 @@ export default function App() {
                 </RouteProtegee>
               }
             >
-              <Route index              element={<Dashboard />} />
-              <Route path="etudiants"   element={<Etudiants />} />
-              <Route path="paiements"   element={<Paiements />} />
-              <Route path="specialites" element={<Specialites />} />
-              <Route path="import"      element={<Import />} />
+              <Route index               element={<Dashboard />} />
+              <Route path="etudiants"    element={<Etudiants />} />
+              <Route path="paiements"    element={<Paiements />} />
+              <Route path="specialites"  element={<Specialites />} />
+              <Route path="qrcodes"      element={<QRCodes />} />
+              <Route path="import"       element={<Import />} />
               <Route path="utilisateurs" element={<Utilisateurs />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
