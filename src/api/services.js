@@ -42,6 +42,13 @@ export const authService = {
     const res = await api.get("/auth/utilisateurs");
     return res.data;
   },
+  modifierUtilisateur: async (id, data) => {
+    const res = await api.put("/auth/utilisateurs/" + id, data);
+    return res.data;
+  },
+  supprimerUtilisateur: async (id) => {
+    await api.delete("/auth/utilisateurs/" + id);
+  },
 };
 
 // ── ÉTUDIANTS ────────────────────────────────────────────────
@@ -142,6 +149,23 @@ export const importService = {
     const res = await api.post("/import/excel", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
+    return res.data;
+  },
+};
+
+// Fonctions utilisateurs exportées séparément
+export const modifierUtilisateur = async (id, data) => {
+  const res = await api.put("/auth/utilisateurs/" + id, data);
+  return res.data;
+};
+export const supprimerUtilisateur = async (id) => {
+  await api.delete("/auth/utilisateurs/" + id);
+};
+
+// ── NOTIFICATIONS ─────────────────────────────────────────────
+export const notificationService = {
+  recentes: async () => {
+    const res = await api.get("/notifications/recentes");
     return res.data;
   },
 };

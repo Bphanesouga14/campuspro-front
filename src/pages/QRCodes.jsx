@@ -196,9 +196,11 @@ export default function QRCodes() {
         </p>
       </div>
 
-      <div className="barre-outils">
-        <input className="recherche" placeholder="🔍 Rechercher..."
-          value={recherche} onChange={e => setRecherche(e.target.value)} />
+      <div className="toolbar">
+        <div className="search-bar" style={{maxWidth:420}}>
+          <input placeholder="Rechercher par nom, matricule, spécialité..."
+            value={recherche} onChange={e => setRecherche(e.target.value)}/>
+        </div>
       </div>
 
       {erreur && <div className="alert alert-erreur">{erreur}</div>}

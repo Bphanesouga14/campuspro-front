@@ -1,163 +1,100 @@
-// ============================================================
-//  src/pages/Etudiants.jsx  —  Liste et gestion des étudiants
-// ============================================================
-
 import { useState, useEffect } from "react";
-import { etudiantService, specialiteService } from "../api/services";
+import { etudiantService, specialiteService, paiementService } from "../api/services";
 import { useAuth } from "../context/AuthContext";
+import {
+  Plus, Search, Pencil, Trash2, Eye, X, ChevronRight,
+  User, Phone, Mail, BookOpen, CreditCard, QrCode,
+  GraduationCap, Users, Download
+} from "lucide-react";
+import api from "../api/client";
 
-// ── Formulaire d'ajout / modification ───────────────────────
-function FormulaireEtudiant({ etudiant, specialites, onSuccess, onAnnuler }) {
-  const estModification = !!etudiant;
+// ── Formulaire créer/modifier ─────────────────────────────────
+function FormulaireEtudiant({ etudiant, specialites, onSuccess, onFermer }) {
+  const est = !!etudiant;
   const [form, setForm] = useState(etudiant || {
-    id_etudiant: "", matricule: "", nom: "", prenom: "", sexe: "M",
-    id_specialite: "", code_specialite: "", niveau: 1,
-    annee_academique: "2024-2025", email_etudiant: "",
-    telephone_etudiant: "", nom_parent: "", prenom_parent: "",
-    lien_parent: "Père", telephone_parent: "", email_parent: "",
+    id_etudiant:"", matricule:"", nom:"", prenom:"", sexe:"M",
+    id_specialite:"", code_specialite:"", niveau:1,
+    annee_academique:"2024-2025", email_etudiant:"",
+    telephone_etudiant:"", nom_parent:"", prenom_parent:"",
+    lien_parent:"Père", telephone_parent:"", email_parent:"",
   });
-  const [erreur, setErreur]     = useState("");
-  const [chargement, setCharge] = useState(false);
+  const [erreur, setErreur] = useState("");
+  const [load, setLoad]     = useState(false);
+  const maj = (c, v) => setForm(f => ({ ...f, [c]: v }));
 
-  const maj = (champ, val) => setForm(f => ({ ...f, [champ]: val }));
-
-  // Quand on choisit une spécialité, remplir automatiquement le code
-  const choisirSpecialite = (id) => {
+  const choisirSpec = (id) => {
     const sp = specialites.find(s => s.id_specialite === id);
-    setForm(f => ({
-      ...f,
-      id_specialite:  id,
-      code_specialite: sp?.code || "",
-    }));
+    setForm(f => ({ ...f, id_specialite: id, code_specialite: sp?.code || "" }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErreur("");
-    setCharge(true);
+  const submit = async (e) => {
+    e.preventDefault(); setErreur(""); setLoad(true);
     try {
-      if (estModification) {
-        await etudiantService.modifier(etudiant.id_etudiant, form);
-      } else {
-        await etudiantService.creer({ ...form, niveau: Number(form.niveau) });
-      }
+      est ? await etudiantService.modifier(etudiant.id_etudiant, form)
+           : await etudiantService.creer({ ...form, niveau: Number(form.niveau) });
       onSuccess();
-    } catch (err) {
-      setErreur(err.response?.data?.detail || "Une erreur est survenue.");
-    } finally {
-      setCharge(false);
-    }
+    } catch (err) { setErreur(err.response?.data?.detail || "Erreur."); }
+    finally { setLoad(false); }
   };
+
+  const FIELD = (label, name, type="text", placeholder="") => (
+    <div className="form-group">
+      <label>{label}</label>
+      <input type={type} value={form[name]||""} placeholder={placeholder}
+        onChange={e => maj(name, e.target.value)} />
+    </div>
+  );
 
   return (
     <div className="modal-overlay">
       <div className="modal">
         <div className="modal-header">
-          <h2>{estModification ? "Modifier l'étudiant" : "Nouvel étudiant"}</h2>
-          <button className="btn-close" onClick={onAnnuler}>✕</button>
+          <h2>{est ? "Modifier l'étudiant" : "Nouvel étudiant"}</h2>
+          <button className="btn-close" onClick={onFermer}><X size={16}/></button>
         </div>
-        <form onSubmit={handleSubmit} className="modal-body">
-          {/* Identité */}
-          <div className="form-section-titre">Identité</div>
+        <form onSubmit={submit} className="modal-body">
+          <div className="form-section-label">Identité</div>
           <div className="form-grid">
-            {!estModification && (
-              <>
-                <div className="form-group">
-                  <label>ID étudiant *</label>
-                  <input value={form.id_etudiant} onChange={e => maj("id_etudiant", e.target.value)} placeholder="ETU-2024-001" required />
-                </div>
-                <div className="form-group">
-                  <label>Matricule *</label>
-                  <input value={form.matricule} onChange={e => maj("matricule", e.target.value)} placeholder="MAT-2024-INFO-001" required />
-                </div>
-              </>
-            )}
-            <div className="form-group">
-              <label>Nom *</label>
-              <input value={form.nom} onChange={e => maj("nom", e.target.value)} required />
-            </div>
-            <div className="form-group">
-              <label>Prénom *</label>
-              <input value={form.prenom} onChange={e => maj("prenom", e.target.value)} required />
-            </div>
-            <div className="form-group">
-              <label>Sexe *</label>
-              <select value={form.sexe} onChange={e => maj("sexe", e.target.value)}>
-                <option value="M">Masculin</option>
-                <option value="F">Féminin</option>
+            {!est && <>{FIELD("ID étudiant *","id_etudiant","text","ETU-2024-001")}{FIELD("Matricule *","matricule","text","MAT-2024-INFO-001")}</>}
+            {FIELD("Nom *","nom")} {FIELD("Prénom *","prenom")}
+            <div className="form-group"><label>Sexe *</label>
+              <select value={form.sexe} onChange={e => maj("sexe",e.target.value)}>
+                <option value="M">Masculin</option><option value="F">Féminin</option>
               </select>
             </div>
-            <div className="form-group">
-              <label>Email</label>
-              <input type="email" value={form.email_etudiant || ""} onChange={e => maj("email_etudiant", e.target.value)} />
-            </div>
-            <div className="form-group">
-              <label>Téléphone</label>
-              <input value={form.telephone_etudiant || ""} onChange={e => maj("telephone_etudiant", e.target.value)} />
-            </div>
+            {FIELD("Email","email_etudiant","email")} {FIELD("Téléphone","telephone_etudiant")}
           </div>
-
-          {/* Scolarité */}
-          <div className="form-section-titre">Scolarité</div>
+          <div className="form-section-label">Scolarité</div>
           <div className="form-grid">
-            <div className="form-group">
-              <label>Spécialité *</label>
-              <select value={form.id_specialite} onChange={e => choisirSpecialite(e.target.value)} required>
+            <div className="form-group"><label>Spécialité *</label>
+              <select value={form.id_specialite} onChange={e => choisirSpec(e.target.value)} required>
                 <option value="">-- Choisir --</option>
-                {specialites.map(s => (
-                  <option key={s.id_specialite} value={s.id_specialite}>
-                    {s.nom_specialite} (N{s.niveau})
-                  </option>
-                ))}
+                {specialites.map(s => <option key={s.id_specialite} value={s.id_specialite}>{s.nom_specialite} (N{s.niveau})</option>)}
               </select>
             </div>
-            <div className="form-group">
-              <label>Niveau *</label>
-              <select value={form.niveau} onChange={e => maj("niveau", e.target.value)}>
-                {[1,2,3,4,5].map(n => <option key={n} value={n}>Niveau {n}</option>)}
+            <div className="form-group"><label>Niveau *</label>
+              <select value={form.niveau} onChange={e => maj("niveau",e.target.value)}>
+                {[1,2,3,4,5].map(n=><option key={n} value={n}>Niveau {n}</option>)}
               </select>
             </div>
-            <div className="form-group">
-              <label>Année académique *</label>
-              <input value={form.annee_academique} onChange={e => maj("annee_academique", e.target.value)} placeholder="2024-2025" required />
-            </div>
+            {FIELD("Année académique *","annee_academique","text","2024-2025")}
           </div>
-
-          {/* Parent */}
-          <div className="form-section-titre">Parent / Tuteur</div>
+          <div className="form-section-label">Parent / Tuteur</div>
           <div className="form-grid">
-            <div className="form-group">
-              <label>Nom parent *</label>
-              <input value={form.nom_parent} onChange={e => maj("nom_parent", e.target.value)} required />
-            </div>
-            <div className="form-group">
-              <label>Prénom parent *</label>
-              <input value={form.prenom_parent} onChange={e => maj("prenom_parent", e.target.value)} required />
-            </div>
-            <div className="form-group">
-              <label>Lien *</label>
-              <select value={form.lien_parent} onChange={e => maj("lien_parent", e.target.value)}>
-                <option>Père</option>
-                <option>Mère</option>
-                <option>Tuteur</option>
+            {FIELD("Nom parent *","nom_parent")} {FIELD("Prénom parent *","prenom_parent")}
+            <div className="form-group"><label>Lien *</label>
+              <select value={form.lien_parent} onChange={e=>maj("lien_parent",e.target.value)}>
+                <option>Père</option><option>Mère</option><option>Tuteur</option>
               </select>
             </div>
-            <div className="form-group">
-              <label>Tél. parent *</label>
-              <input value={form.telephone_parent} onChange={e => maj("telephone_parent", e.target.value)} required />
-            </div>
-            <div className="form-group">
-              <label>Email parent</label>
-              <input type="email" value={form.email_parent || ""} onChange={e => maj("email_parent", e.target.value)} />
-            </div>
+            {FIELD("Téléphone parent *","telephone_parent")}
+            {FIELD("Email parent","email_parent","email")}
           </div>
-
           {erreur && <div className="alert alert-erreur">{erreur}</div>}
-
           <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onAnnuler}>Annuler</button>
-            <button type="submit" className="btn btn-primary" disabled={chargement}>
-              {chargement ? "Enregistrement..." : (estModification ? "Modifier" : "Créer")}
+            <button type="button" className="btn btn-secondary" onClick={onFermer}>Annuler</button>
+            <button type="submit" className="btn btn-primary" disabled={load}>
+              {load ? "Enregistrement..." : est ? "Modifier" : "Créer"}
             </button>
           </div>
         </form>
@@ -166,112 +103,263 @@ function FormulaireEtudiant({ etudiant, specialites, onSuccess, onAnnuler }) {
   );
 }
 
-// ── Page principale ──────────────────────────────────────────
-export default function Etudiants() {
-  const [etudiants, setEtudiants]     = useState([]);
-  const [specialites, setSpecialites] = useState([]);
-  const [chargement, setCharge]       = useState(true);
-  const [recherche, setRecherche]     = useState("");
-  const [modalOuvert, setModal]       = useState(false);
-  const [etudiantEdite, setEdite]     = useState(null);
-  const [erreur, setErreur]           = useState("");
-  const { aLeRole }                   = useAuth();
+// ── Fiche détail étudiant ─────────────────────────────────────
+function FicheEtudiant({ etudiant, specialites, onModifier, onSupprimer, onFermer, peutModifier, peutSupprimer }) {
+  const [onglet, setOnglet]   = useState("infos"); // infos | paiements | qrcode
+  const [paiements, setPai]   = useState([]);
+  const [qrSrc, setQrSrc]     = useState(null);
+  const [qrInfo, setQrInfo]   = useState(null);
+  const [loadPai, setLoadPai] = useState(false);
+  const [loadQr, setLoadQr]   = useState(false);
 
-  const peutModifier = aLeRole("ADMIN", "SECRETAIRE");
+  useEffect(() => {
+    if (onglet === "paiements" && paiements.length === 0) {
+      setLoadPai(true);
+      etudiantService.paiements(etudiant.id_etudiant)
+        .then(d => setPai(d.paiements || []))
+        .finally(() => setLoadPai(false));
+    }
+    if (onglet === "qrcode" && !qrSrc) {
+      setLoadQr(true);
+      Promise.all([
+        api.get(`/etudiants/${etudiant.id_etudiant}/qr-code`),
+        api.get(`/etudiants/${etudiant.id_etudiant}/qr-code/image`, { responseType:"blob" })
+      ]).then(([info, img]) => {
+        setQrInfo(info.data);
+        setQrSrc(URL.createObjectURL(img.data));
+      }).catch(() => {}).finally(() => setLoadQr(false));
+    }
+  }, [onglet]);
+
+  const telechargerQR = () => {
+    if (!qrSrc) return;
+    const a = document.createElement("a");
+    a.href = qrSrc; a.download = `QR_${etudiant.matricule}.png`; a.click();
+  };
+
+  const badgeSt = { "PAYÉ":"vert","PARTIEL":"orange","EN_ATTENTE":"gris","EN_RETARD":"rouge" };
+  const fmt = (n) => new Intl.NumberFormat("fr-FR").format(n);
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal modal-fiche">
+        {/* Header */}
+        <div className="fiche-header">
+          <div className="fiche-avatar">{etudiant.prenom?.[0]}{etudiant.nom?.[0]}</div>
+          <div className="fiche-identity">
+            <h2>{etudiant.nom} {etudiant.prenom}</h2>
+            <p>{etudiant.matricule} · {etudiant.code_specialite} · Niveau {etudiant.niveau}</p>
+          </div>
+          <div className="fiche-actions">
+            {peutModifier && (
+              <button className="btn btn-secondary btn-sm" onClick={onModifier}>
+                <Pencil size={13}/> Modifier
+              </button>
+            )}
+            {peutSupprimer && (
+              <button className="btn btn-danger btn-sm" onClick={onSupprimer}>
+                <Trash2 size={13}/> Supprimer
+              </button>
+            )}
+            <button className="btn-close" onClick={onFermer}><X size={16}/></button>
+          </div>
+        </div>
+
+        {/* Onglets */}
+        <div className="fiche-tabs">
+          {[
+            { id:"infos",     label:"Informations", Icon:User },
+            { id:"paiements", label:"Paiements",    Icon:CreditCard },
+            { id:"qrcode",    label:"QR Code",      Icon:QrCode },
+          ].map(t => (
+            <button key={t.id} className={`fiche-tab ${onglet===t.id?"actif":""}`}
+              onClick={() => setOnglet(t.id)}>
+              <t.Icon size={14}/> {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="modal-body">
+          {/* ── INFOS ── */}
+          {onglet === "infos" && (
+            <div className="fiche-infos">
+              <div className="fiche-section">
+                <div className="fiche-section-title"><User size={14}/> Identité</div>
+                <div className="fiche-grid">
+                  <div className="fiche-row"><span>Nom complet</span><strong>{etudiant.nom} {etudiant.prenom}</strong></div>
+                  <div className="fiche-row"><span>Sexe</span><strong>{etudiant.sexe === "M" ? "Masculin" : "Féminin"}</strong></div>
+                  <div className="fiche-row"><span>Matricule</span><code>{etudiant.matricule}</code></div>
+                  <div className="fiche-row"><span>Année</span><strong>{etudiant.annee_academique}</strong></div>
+                  {etudiant.email_etudiant && <div className="fiche-row"><span><Mail size={12}/> Email</span><strong>{etudiant.email_etudiant}</strong></div>}
+                  {etudiant.telephone_etudiant && <div className="fiche-row"><span><Phone size={12}/> Téléphone</span><strong>{etudiant.telephone_etudiant}</strong></div>}
+                </div>
+              </div>
+              <div className="fiche-section">
+                <div className="fiche-section-title"><BookOpen size={14}/> Scolarité</div>
+                <div className="fiche-grid">
+                  <div className="fiche-row"><span>Spécialité</span><strong>{etudiant.code_specialite}</strong></div>
+                  <div className="fiche-row"><span>Niveau</span><strong>Niveau {etudiant.niveau}</strong></div>
+                </div>
+              </div>
+              <div className="fiche-section">
+                <div className="fiche-section-title"><Users size={14}/> Parent / Tuteur</div>
+                <div className="fiche-grid">
+                  <div className="fiche-row"><span>Nom</span><strong>{etudiant.nom_parent} {etudiant.prenom_parent}</strong></div>
+                  <div className="fiche-row"><span>Lien</span><strong>{etudiant.lien_parent}</strong></div>
+                  <div className="fiche-row"><span><Phone size={12}/> Téléphone</span><strong>{etudiant.telephone_parent}</strong></div>
+                  {etudiant.email_parent && <div className="fiche-row"><span><Mail size={12}/> Email</span><strong>{etudiant.email_parent}</strong></div>}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── PAIEMENTS ── */}
+          {onglet === "paiements" && (
+            loadPai ? <div className="loading-text">Chargement...</div> :
+            paiements.length === 0 ? (
+              <div className="empty-state"><CreditCard size={36} style={{marginBottom:8}}/><br/>Aucun paiement enregistré</div>
+            ) : (
+              <div className="fiche-paiements">
+                {paiements.map(p => (
+                  <div key={p.id_paiement} className="fpai-card">
+                    <div className="fpai-left">
+                      <div className="fpai-tranche">Tranche {p.numero_tranche}</div>
+                      <div className="fpai-montants">{fmt(p.montant_paye)} / {fmt(p.montant_attendu)} FCFA</div>
+                      <div className="fpai-date">Limite : {p.date_limite}</div>
+                    </div>
+                    <div className="fpai-right">
+                      <span className={`badge badge--${badgeSt[p.statut]||"gris"}`}>{p.statut}</span>
+                      {p.montant_paye < p.montant_attendu && (
+                        <div className="fpai-reste">Reste : {fmt(p.montant_attendu - p.montant_paye)} FCFA</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          )}
+
+          {/* ── QR CODE ── */}
+          {onglet === "qrcode" && (
+            loadQr ? <div className="loading-text">Chargement du QR code...</div> :
+            !qrSrc ? (
+              <div className="empty-state"><QrCode size={36} style={{marginBottom:8}}/><br/>Aucun QR code disponible<br/><small>Généré automatiquement après paiement d'une tranche</small></div>
+            ) : (
+              <div style={{textAlign:"center"}}>
+                {qrInfo?.statut && <span className={`badge badge--${qrInfo.statut==="ACTIF"?"vert":"rouge"}`} style={{marginBottom:"1rem",display:"inline-block"}}>{qrInfo.statut}</span>}
+                <div className="qr-img-wrap" style={{margin:"0 auto 1.25rem"}}>
+                  <img src={qrSrc} alt="QR" style={{width:200,height:200,imageRendering:"pixelated",display:"block"}}/>
+                </div>
+                <button className="btn btn-primary" onClick={telechargerQR}>
+                  <Download size={14}/> Télécharger PNG
+                </button>
+              </div>
+            )
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Page principale ───────────────────────────────────────────
+export default function Etudiants() {
+  const [etudiants, setEtudiants]   = useState([]);
+  const [specialites, setSpec]      = useState([]);
+  const [load, setLoad]             = useState(true);
+  const [recherche, setRecherche]   = useState("");
+  const [modal, setModal]           = useState(null); // null | "creer" | "modifier"
+  const [fiche, setFiche]           = useState(null);
+  const [courant, setCourant]       = useState(null);
+  const { aLeRole }                 = useAuth();
+  const peutModifier = aLeRole("ADMIN","SECRETAIRE");
   const peutSupprimer = aLeRole("ADMIN");
 
   const charger = async () => {
-    setCharge(true);
+    setLoad(true);
     try {
-      const [e, s] = await Promise.all([
-        etudiantService.lister(),
-        specialiteService.lister(),
-      ]);
-      setEtudiants(e);
-      setSpecialites(s);
-    } catch {
-      setErreur("Erreur de chargement.");
-    } finally {
-      setCharge(false);
-    }
+      const [e,s] = await Promise.all([etudiantService.lister(), specialiteService.lister()]);
+      setEtudiants(e); setSpec(s);
+    } finally { setLoad(false); }
   };
-
   useEffect(() => { charger(); }, []);
 
-  const supprimer = async (id) => {
-    if (!window.confirm("Supprimer cet étudiant ?")) return;
-    try {
-      await etudiantService.supprimer(id);
-      charger();
-    } catch (err) {
-      alert(err.response?.data?.detail || "Suppression impossible.");
-    }
+  const supprimer = async (e) => {
+    setFiche(null);
+    if (!window.confirm(`Supprimer ${e.nom} ${e.prenom} ?`)) return;
+    try { await etudiantService.supprimer(e.id_etudiant); charger(); }
+    catch (err) { alert(err.response?.data?.detail || "Suppression impossible."); }
   };
 
-  const etudiantsFiltres = etudiants.filter(e =>
-    `${e.nom} ${e.prenom} ${e.matricule}`.toLowerCase().includes(recherche.toLowerCase())
+  const filtres = etudiants.filter(e =>
+    `${e.nom} ${e.prenom} ${e.matricule} ${e.code_specialite}`.toLowerCase().includes(recherche.toLowerCase())
   );
 
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Étudiants <span className="badge">{etudiants.length}</span></h1>
+        <div>
+          <h1>Étudiants <span className="count-badge">{etudiants.length}</span></h1>
+        </div>
         {peutModifier && (
-          <button className="btn btn-primary" onClick={() => { setEdite(null); setModal(true); }}>
-            + Nouvel étudiant
+          <button className="btn btn-primary" onClick={() => { setCourant(null); setModal("creer"); }}>
+            <Plus size={15}/> Nouvel étudiant
           </button>
         )}
       </div>
 
-      <div className="barre-outils">
-        <input
-          className="recherche"
-          placeholder="🔍 Rechercher par nom, prénom ou matricule..."
-          value={recherche}
-          onChange={e => setRecherche(e.target.value)}
-        />
+      <div className="toolbar">
+        <div className="search-bar" style={{maxWidth:460}}>
+          <input placeholder="Rechercher par nom, matricule, spécialité..."
+            value={recherche} onChange={e => setRecherche(e.target.value)} />
+        </div>
       </div>
 
-      {erreur && <div className="alert alert-erreur">{erreur}</div>}
-
-      {chargement ? (
-        <div className="chargement">Chargement...</div>
-      ) : (
-        <div className="table-wrapper">
+      {load ? <div className="loading-text">Chargement...</div> : (
+        <div className="table-wrap">
           <table className="table">
             <thead>
               <tr>
-                <th>Matricule</th>
-                <th>Nom & Prénom</th>
-                <th>Spécialité</th>
-                <th>Niveau</th>
-                <th>Téléphone</th>
-                <th>Actions</th>
+                <th>Étudiant</th><th>Matricule</th><th>Spécialité</th>
+                <th>Niveau</th><th>Contact</th><th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {etudiantsFiltres.length === 0 ? (
-                <tr><td colSpan={6} className="vide">Aucun étudiant trouvé.</td></tr>
-              ) : etudiantsFiltres.map(e => (
-                <tr key={e.id_etudiant}>
+              {filtres.length === 0 ? (
+                <tr><td colSpan={6} className="table-empty">Aucun étudiant trouvé</td></tr>
+              ) : filtres.map(e => (
+                <tr key={e.id_etudiant} className="clickable-row"
+                  onClick={() => setFiche(e)} style={{cursor:"pointer"}}>
+                  <td>
+                    <div className="table-user">
+                      <div className="table-avatar">{e.prenom?.[0]}{e.nom?.[0]}</div>
+                      <div>
+                        <div className="table-name">{e.nom} {e.prenom}</div>
+                        <div className="table-sub">{e.sexe === "M" ? "Masculin" : "Féminin"}</div>
+                      </div>
+                    </div>
+                  </td>
                   <td><code>{e.matricule}</code></td>
-                  <td><strong>{e.nom} {e.prenom}</strong></td>
                   <td>{e.code_specialite}</td>
                   <td>N{e.niveau}</td>
-                  <td>{e.telephone_etudiant || e.telephone_parent}</td>
-                  <td className="actions">
-                    {peutModifier && (
-                      <button className="btn btn-sm btn-secondary"
-                        onClick={() => { setEdite(e); setModal(true); }}>
-                        ✏️
+                  <td>{e.telephone_etudiant || e.telephone_parent || "—"}</td>
+                  <td onClick={ev => ev.stopPropagation()}>
+                    <div className="actions">
+                      <button className="icon-btn" title="Voir la fiche" onClick={() => setFiche(e)}>
+                        <Eye size={15}/>
                       </button>
-                    )}
-                    {peutSupprimer && (
-                      <button className="btn btn-sm btn-danger"
-                        onClick={() => supprimer(e.id_etudiant)}>
-                        🗑️
-                      </button>
-                    )}
+                      {peutModifier && (
+                        <button className="icon-btn" title="Modifier"
+                          onClick={() => { setCourant(e); setModal("modifier"); }}>
+                          <Pencil size={15}/>
+                        </button>
+                      )}
+                      {peutSupprimer && (
+                        <button className="icon-btn danger" title="Supprimer" onClick={() => supprimer(e)}>
+                          <Trash2 size={15}/>
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -280,12 +368,24 @@ export default function Etudiants() {
         </div>
       )}
 
-      {modalOuvert && (
+      {/* Fiche détail */}
+      {fiche && (
+        <FicheEtudiant
+          etudiant={fiche} specialites={specialites}
+          peutModifier={peutModifier} peutSupprimer={peutSupprimer}
+          onModifier={() => { setCourant(fiche); setFiche(null); setModal("modifier"); }}
+          onSupprimer={() => supprimer(fiche)}
+          onFermer={() => setFiche(null)}
+        />
+      )}
+
+      {/* Formulaire créer/modifier */}
+      {(modal === "creer" || modal === "modifier") && (
         <FormulaireEtudiant
-          etudiant={etudiantEdite}
+          etudiant={modal === "modifier" ? courant : null}
           specialites={specialites}
-          onSuccess={() => { setModal(false); charger(); }}
-          onAnnuler={() => setModal(false)}
+          onSuccess={() => { setModal(null); charger(); }}
+          onFermer={() => setModal(null)}
         />
       )}
     </div>
