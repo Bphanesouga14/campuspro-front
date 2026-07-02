@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import SelecteurTheme from "../components/SelecteurTheme";
+import Footer from "../components/Footer";
 import {
   GraduationCap, CreditCard, QrCode, Upload,
   Users, Bell, BarChart3, ShieldCheck, ArrowRight,
@@ -63,15 +64,18 @@ export default function Landing() {
         <div className="landing-nav-brand">
           <div className="logo-icon" style={{width:36,height:36}}>
             <GraduationCap size={20} color="white"/>
-          </div>
+            <Footer/>
+</div>
           <span className="landing-nav-name">CampusPro</span>
-        </div>
+          <Footer/>
+</div>
         <div className="landing-nav-actions">
           <SelecteurTheme/>
           <button className="btn btn-primary" onClick={()=>navigate("/login")}>
             Se connecter <ArrowRight size={14}/>
           </button>
-        </div>
+          <Footer/>
+</div>
       </nav>
 
       {/* ── Hero ── */}
@@ -80,11 +84,13 @@ export default function Landing() {
           <div className="hero-blob hero-blob-1"/>
           <div className="hero-blob hero-blob-2"/>
           <div className="hero-blob hero-blob-3"/>
-        </div>
+          <Footer/>
+</div>
         <div className="landing-hero-content">
           <div className="landing-hero-badge">
             <ShieldCheck size={13}/> Plateforme sécurisée · Cameroun
-          </div>
+            <Footer/>
+</div>
           <h1 className="landing-hero-title">
             La gestion scolaire<br/>
             <span className="landing-hero-accent">intelligente et moderne</span>
@@ -98,19 +104,25 @@ export default function Landing() {
             <button className="btn btn-landing-primary" onClick={()=>navigate("/login")}>
               Accéder à la plateforme <ArrowRight size={16}/>
             </button>
-          </div>
-        </div>
+            <Footer/>
+</div>
+          <Footer/>
+</div>
 
         {/* ── Stats ── */}
         <div className="landing-stats">
           {STATS.map((s,i) => (
             <div key={i} className="landing-stat">
               <s.Icon size={20} className="landing-stat-icon"/>
-              <div className="landing-stat-valeur">{s.valeur}</div>
-              <div className="landing-stat-unite">{s.unite}</div>
-            </div>
+              <div className="landing-stat-valeur">{s.valeur}  <Footer/>
+</div>
+              <div className="landing-stat-unite">{s.unite}  <Footer/>
+</div>
+              <Footer/>
+</div>
           ))}
-        </div>
+          <Footer/>
+</div>
       </section>
 
       {/* ── Fonctionnalités ── */}
@@ -120,18 +132,22 @@ export default function Landing() {
           <p className="landing-section-sub">
             Une solution complète pensée pour les établissements d'enseignement supérieur
           </p>
-        </div>
+          <Footer/>
+</div>
         <div className="landing-features-grid">
           {FONCTIONNALITES.map((f,i) => (
             <div key={i} className="landing-feature-card">
               <div className={`landing-feature-icon color-${f.couleur}`}>
                 <f.Icon size={24}/>
-              </div>
+                <Footer/>
+</div>
               <h3 className="landing-feature-titre">{f.titre}</h3>
               <p className="landing-feature-desc">{f.desc}</p>
-            </div>
+              <Footer/>
+</div>
           ))}
-        </div>
+          <Footer/>
+</div>
       </section>
 
       {/* ── Rôles ── */}
@@ -141,22 +157,27 @@ export default function Landing() {
           <p className="landing-section-sub">
             Trois niveaux d'accès sécurisés pour une gestion efficace et confidentielle
           </p>
-        </div>
+          <Footer/>
+</div>
         <div className="landing-roles-grid">
           {ROLES.map((r,i) => (
             <div key={i} className="landing-role-card">
               <div className={`landing-role-icon color-${r.couleur}`}>
                 <r.Icon size={28}/>
-              </div>
+                <Footer/>
+</div>
               <h3 className="landing-role-titre">{r.role}</h3>
               <p className="landing-role-desc">{r.desc}</p>
               <div className="landing-role-check">
                 <CheckCircle2 size={14} style={{color:`var(--${r.couleur})`}}/>
                 <span>Accès sécurisé JWT</span>
-              </div>
-            </div>
+                <Footer/>
+</div>
+              <Footer/>
+</div>
           ))}
-        </div>
+          <Footer/>
+</div>
       </section>
 
       {/* ── CTA final ── */}
@@ -164,13 +185,15 @@ export default function Landing() {
         <div className="landing-cta-content">
           <div className="landing-cta-icons">
             <Smartphone size={32}/><Globe size={32}/><Lock size={32}/>
-          </div>
+            <Footer/>
+</div>
           <h2>Prêt à moderniser votre établissement ?</h2>
           <p>Connectez-vous dès maintenant et commencez à gérer vos étudiants efficacement.</p>
           <button className="btn btn-landing-primary btn-cta" onClick={()=>navigate("/login")}>
             Accéder à CampusPro <ArrowRight size={16}/>
           </button>
-        </div>
+          <Footer/>
+</div>
       </section>
 
       {/* ── Footer ── */}
@@ -178,7 +201,8 @@ export default function Landing() {
         <div className="landing-footer-brand">
           <GraduationCap size={18}/>
           <strong>CampusPro</strong>
-        </div>
+          <Footer/>
+</div>
         <p>Gestion des étudiants, paiements & QR codes · Plateforme sécurisée</p>
       </footer>
     </div>

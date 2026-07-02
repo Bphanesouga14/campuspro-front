@@ -5,17 +5,20 @@ import SelecteurTheme from "./SelecteurTheme";
 import Footer from "./Footer";
 import {
   LayoutDashboard, GraduationCap, CreditCard, BookOpen,
-  QrCode, Upload, Users, LogOut, PanelLeftClose, PanelLeftOpen
+  QrCode, Upload, Users, LogOut, PanelLeftClose, PanelLeftOpen,
+  Bell, Settings
 } from "lucide-react";
 
 const NAV = [
-  { to:"/",             Icon:LayoutDashboard, label:"Tableau de bord", roles:["ADMIN","SECRETAIRE","CAISSIER"] },
-  { to:"/etudiants",    Icon:GraduationCap,   label:"Étudiants" },
-  { to:"/paiements",    Icon:CreditCard,      label:"Paiements" },
-  { to:"/specialites",  Icon:BookOpen,        label:"Spécialités" },
-  { to:"/qrcodes",      Icon:QrCode,          label:"QR Codes" },
-  { to:"/import",       Icon:Upload,          label:"Import Excel",    roles:["ADMIN","SECRETAIRE"] },
-  { to:"/utilisateurs", Icon:Users,           label:"Utilisateurs",    roles:["ADMIN"] },
+  { to:"/",              Icon:LayoutDashboard, label:"Tableau de bord" },
+  { to:"/etudiants",     Icon:GraduationCap,   label:"Étudiants" },
+  { to:"/paiements",     Icon:CreditCard,      label:"Paiements" },
+  { to:"/specialites",   Icon:BookOpen,        label:"Spécialités" },
+  { to:"/qrcodes",       Icon:QrCode,          label:"QR Codes" },
+  { to:"/import",        Icon:Upload,          label:"Import Excel",   roles:["ADMIN","SECRETAIRE"] },
+  { to:"/utilisateurs",  Icon:Users,           label:"Utilisateurs",   roles:["ADMIN"] },
+  { to:"/notifications", Icon:Bell,            label:"Notifications" },
+  { to:"/parametres",    Icon:Settings,        label:"Paramètres" },
 ];
 
 export default function Layout() {
@@ -25,8 +28,6 @@ export default function Layout() {
 
   return (
     <div className={`app ${reduit?"sidebar-reduite":""}`}>
-
-      {/* ══ SIDEBAR ══ */}
       <aside className="sidebar">
         <div className="sidebar-logo">
           <div className="logo-icon"><GraduationCap size={22} color="white"/></div>
@@ -53,13 +54,10 @@ export default function Layout() {
           })}
         </nav>
 
-        {/* Bouton réduire — EN BAS de la nav, bien visible */}
         <div className="sidebar-collapse-btn-wrap">
           <button className="sidebar-collapse-btn" onClick={()=>setReduit(!reduit)}
-            title={reduit?"Agrandir le menu":"Réduire le menu"}>
-            {reduit
-              ? <><PanelLeftOpen size={16}/> </>
-              : <><PanelLeftClose size={16}/>{" Réduire"}</>}
+            title={reduit?"Agrandir":"Réduire"}>
+            {reduit ? <PanelLeftOpen size={16}/> : <><PanelLeftClose size={16}/>{" Réduire"}</>}
           </button>
         </div>
 
@@ -73,20 +71,15 @@ export default function Layout() {
               </div>
             )}
             <button className="btn-logout"
-              onClick={()=>{deconnecter();navigate("/login");}}
-              title="Déconnexion">
+              onClick={()=>{deconnecter();navigate("/login");}} title="Déconnexion">
               <LogOut size={15}/>
             </button>
           </div>
         </div>
       </aside>
 
-      {/* ══ CONTENU ══ */}
       <main className="main">
-        {/* Header fixe en haut à droite avec bouton thème */}
-        <div className="app-topbar">
-          <SelecteurTheme/>
-        </div>
+        <div className="app-topbar"><SelecteurTheme/></div>
         <div className="main-inner">
           <Outlet/>
           <Footer/>

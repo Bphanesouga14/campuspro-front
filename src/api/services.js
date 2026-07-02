@@ -169,3 +169,31 @@ export const notificationService = {
     return res.data;
   },
 };
+
+// ── PROFIL ────────────────────────────────────────────────────
+export const profilService = {
+  obtenir: async () => {
+    const res = await api.get("/profil");
+    return res.data;
+  },
+  modifier: async (data) => {
+    const res = await api.put("/profil", data);
+    return res.data;
+  },
+  uploaderPhoto: async (fichier) => {
+    const form = new FormData();
+    form.append("fichier", fichier);
+    const res = await api.post("/profil/photo", form);
+    return res.data; // { photo: "data:image/...;base64,..." }
+  },
+  uploaderPhotoEtudiant: async (idEtudiant, fichier) => {
+    const form = new FormData();
+    form.append("fichier", fichier);
+    const res = await api.post("/etudiants/" + idEtudiant + "/photo", form);
+    return res.data;
+  },
+  getPhotoEtudiant: async (idEtudiant) => {
+    const res = await api.get("/etudiants/" + idEtudiant + "/photo");
+    return res.data.photo;
+  },
+};

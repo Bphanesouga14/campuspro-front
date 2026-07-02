@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
-import { etudiantService, specialiteService, paiementService } from "../api/services";
+import { useState, useEffect, useRef } from "react";
+import { etudiantService, specialiteService, paiementService, profilService } from "../api/services";
 import { useAuth } from "../context/AuthContext";
 import {
   Plus, Search, Pencil, Trash2, Eye, X, ChevronRight,
   User, Phone, Mail, BookOpen, CreditCard, QrCode,
-  GraduationCap, Users, Download
+  GraduationCap, Users, Download, Camera
 } from "lucide-react";
 import api from "../api/client";
 
@@ -105,12 +105,24 @@ function FormulaireEtudiant({ etudiant, specialites, onSuccess, onFermer }) {
 
 // ── Fiche détail étudiant ─────────────────────────────────────
 function FicheEtudiant({ etudiant, specialites, onModifier, onSupprimer, onFermer, peutModifier, peutSupprimer }) {
-  const [onglet, setOnglet]   = useState("infos"); // infos | paiements | qrcode
+  const [onglet, setOnglet]   = useState("infos");
   const [paiements, setPai]   = useState([]);
   const [qrSrc, setQrSrc]     = useState(null);
   const [qrInfo, setQrInfo]   = useState(null);
+  const [photo, setPhoto]     = useState(etudiant.photo || null);
   const [loadPai, setLoadPai] = useState(false);
   const [loadQr, setLoadQr]   = useState(false);
+  const photoRef              = useRef(null);
+
+  const uploaderPhoto = async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      const res = await profilService.uploaderPhotoEtudiant(etudiant.id_etudiant, f);
+      setPhoto(res.photo);
+      // Forcer rechargement du QR code (il inclut maintenant la photo)
+      setQrSrc(null);
+    } catch (err) { alert(err.response?.data?.detail || "Erreur upload."); }
+  };
 
   useEffect(() => {
     if (onglet === "paiements" && paiements.length === 0) {
@@ -143,9 +155,29 @@ function FicheEtudiant({ etudiant, specialites, onModifier, onSupprimer, onFerme
   return (
     <div className="modal-overlay">
       <div className="modal modal-fiche">
-        {/* Header */}
         <div className="fiche-header">
-          <div className="fiche-avatar">{etudiant.prenom?.[0]}{etudiant.nom?.[0]}</div>
+          {/* Avatar avec photo réelle ou initiales + bouton upload */}
+          <div style={{position:"relative",flexShrink:0}}>
+            {photo ? (
+              <img src={photo} alt={etudiant.nom}
+                style={{width:56,height:56,borderRadius:14,objectFit:"cover",
+                  border:"2px solid var(--primary)",display:"block"}}/>
+            ) : (
+              <div className="fiche-avatar">{etudiant.prenom?.[0]}{etudiant.nom?.[0]}</div>
+            )}
+            {peutModifier && (
+              <div style={{position:"absolute",bottom:-4,right:-4,width:22,height:22,
+                borderRadius:"50%",background:"var(--primary)",cursor:"pointer",
+                display:"flex",alignItems:"center",justifyContent:"center",
+                border:"2px solid var(--card)"}}
+                onClick={()=>photoRef.current?.click()}>
+                <Camera size={11} color="white"/>
+              </div>
+            )}
+            <input ref={photoRef} type="file" accept="image/*"
+              style={{display:"none"}} onChange={uploaderPhoto}/>
+          </div>
+
           <div className="fiche-identity">
             <h2>{etudiant.nom} {etudiant.prenom}</h2>
             <p>{etudiant.matricule} · {etudiant.code_specialite} · Niveau {etudiant.niveau}</p>

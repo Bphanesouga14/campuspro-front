@@ -1550,3 +1550,79 @@ code { background: var(--bg2); padding: 2px 7px; border-radius: 5px; font-size: 
   text-align: center; margin-top: 0.75rem;
   font-size: 0.72rem; color: var(--text3);
 }
+
+/* ══════════════════════════════════════════════════════════
+   PAGE NOTIFICATIONS
+   ══════════════════════════════════════════════════════════ */
+.notif-full-card {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: var(--card); border-radius: var(--radius-sm);
+  border: 1px solid var(--border); padding: 1rem 1.1rem;
+  box-shadow: var(--shadow); transition: border-color 0.15s;
+}
+.notif-full-card:hover { border-color: var(--primary); }
+[data-theme="emeraude"] .notif-full-card { background: rgba(255,255,255,0.05); }
+
+/* ══════════════════════════════════════════════════════════
+   PAGE PARAMÈTRES
+   ══════════════════════════════════════════════════════════ */
+.param-layout {
+  display: grid; grid-template-columns: 220px 1fr;
+  gap: 1.5rem; align-items: start;
+}
+.param-menu {
+  background: var(--card); border-radius: var(--radius);
+  border: 1px solid var(--border); padding: 0.5rem;
+  display: flex; flex-direction: column; gap: 3px;
+  position: sticky; top: 80px;
+}
+[data-theme="emeraude"] .param-menu { background: rgba(255,255,255,0.05); }
+.param-menu-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0.65rem 0.9rem; border-radius: var(--radius-sm);
+  font-size: 0.87rem; font-weight: 500; color: var(--text2);
+  text-align: left; width: 100%; transition: all 0.15s;
+}
+.param-menu-item:hover { background: var(--bg2); color: var(--text); }
+.param-menu-item.actif { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+
+.param-content {
+  background: var(--card); border-radius: var(--radius);
+  border: 1px solid var(--border); padding: 1.75rem;
+  box-shadow: var(--shadow);
+}
+[data-theme="emeraude"] .param-content { background: rgba(255,255,255,0.05); }
+.param-section-title {
+  font-size: 1.1rem; font-weight: 700; color: var(--text);
+  margin-bottom: 1.5rem; padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.param-section-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.78rem; font-weight: 700; color: var(--primary);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  margin: 1.25rem 0 0.75rem;
+}
+
+/* Cartes thème dans paramètres */
+.param-theme-card {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 1.2rem; border-radius: var(--radius-sm);
+  border: 2px solid var(--border); background: var(--bg2);
+  font-size: 0.85rem; font-weight: 500; color: var(--text2);
+  position: relative; transition: all 0.18s; cursor: pointer;
+}
+.param-theme-card:hover { border-color: var(--primary); color: var(--text); }
+.param-theme-card.actif { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+.param-theme-check { position: absolute; top: 8px; right: 8px; color: var(--primary); }
+
+/* Cartes langue */
+.param-langue-card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 1rem 1.2rem; border-radius: var(--radius-sm);
+  border: 2px solid var(--border); background: var(--bg2);
+  font-size: 0.88rem; font-weight: 500; color: var(--text);
+  cursor: pointer; transition: all 0.18s; position: relative;
+}
+.param-langue-card:hover { border-color: var(--primary); }
+.param-langue-card.actif { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
