@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/client";
-import { Bell, Banknote, Clock, GraduationCap, RefreshCw, Filter } from "lucide-react";
+import { Bell, Banknote, Clock, GraduationCap, RefreshCw, Filter, Send } from "lucide-react";
 
 function notifMeta(type) {
   if (!type) return { couleur:"purple" };
@@ -17,6 +17,24 @@ export default function Notifications() {
   const [filtre, setFiltre] = useState("tous");
   const { utilisateur }     = useAuth();
   const role = utilisateur?.role;
+
+
+
+  const { aLeRole } = useAuth();
+
+  const lancerRelances = async () => {
+    if (!window.confirm("Envoyer les relances à tous les parents en retard ?")) return;
+    try {
+      const res = await api.post("/notifications/relances/lancer");
+      alert(`✅ ${res.data.message}`);
+      charger(); // Rafraîchir les notifications
+    } catch (err) {
+      alert("Erreur : " + (err.response?.data?.detail || err.message));
+    }
+  };
+
+
+
 
   const charger = () => {
     setLoad(true);
@@ -57,7 +75,13 @@ export default function Notifications() {
           </select>
           <button className="btn btn-secondary" onClick={charger}>
             <RefreshCw size={14}/> Actualiser
-          </button>
+          </button>  
+
+          {aLeRole("ADMIN") && (
+            <button className="btn btn-primary" onClick={lancerRelances}>
+              <Send size={14}/> Lancer les relances
+            </button>
+          )}
         </div>
       </div>
 

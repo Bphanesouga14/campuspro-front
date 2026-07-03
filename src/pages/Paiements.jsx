@@ -1,9 +1,14 @@
+import { exporterExcel, COLONNES_PAIEMENTS, COLONNES_RETARDS } from "../utils/exportExcel";
+
+
+
+import { FileText } from "lucide-react";
 import { useState, useEffect } from "react";
 import { etudiantService, paiementService } from "../api/services";
 import { useAuth } from "../context/AuthContext";
 import {
   Search, CreditCard, AlertCircle, CheckCircle2,
-  Clock, X, Banknote, ChevronRight, Filter, ReceiptText
+  Clock, X, Banknote, ChevronRight, Filter,Download, ReceiptText
 } from "lucide-react";
 
 const fmt = (n) => new Intl.NumberFormat("fr-FR").format(n);
@@ -125,6 +130,43 @@ function PanelPaiements({ etudiant, onPayer, peutPayer }) {
     return "var(--border)";
   };
 
+    const telechargerRecu = async (idPaiement) => {
+  try {
+    const token = localStorage.getItem("token");
+    
+    // Utiliser fetch directement avec le token
+    const res = await fetch(
+      `http://127.0.0.1:8000/api/v1/paiements/${idPaiement}/recu`,
+      {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      alert("Erreur : " + (errJson.detail || `Code ${res.status}`));
+      return;
+    }
+
+    // Récupérer le PDF comme blob
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const lien = document.createElement("a");
+    lien.href     = url;
+    lien.download = `Recu_${idPaiement}.pdf`;
+    document.body.appendChild(lien);
+    lien.click();
+    document.body.removeChild(lien);
+    URL.revokeObjectURL(url);
+
+  } catch (err) {
+    alert("Erreur réseau : " + err.message);
+  }
+};
+
   return (
     <div className="pay-detail" style={{display:"flex",flexDirection:"column",overflow:"hidden"}}>
       {/* Header étudiant — fixe */}
@@ -213,11 +255,23 @@ function PanelPaiements({ etudiant, onPayer, peutPayer }) {
                     <span style={{display:"flex",alignItems:"center",gap:4,fontSize:"0.75rem",color:"var(--text3)"}}>
                       <Clock size={11}/> Limite : {p.date_limite}
                     </span>
-                    {peutPayer && !isPaye && (
-                      <button className="btn btn-primary btn-sm" onClick={() => onPayer(p)}>
-                        <Banknote size={12}/> Payer
-                      </button>
-                    )}
+                    <div style={{display:"flex",gap:6}}>
+                      {/* Bouton télécharger reçu — visible si versement > 0 */}
+                      {p.montant_paye > 0 && (
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          title="Télécharger le reçu PDF"
+                          onClick={() => telechargerRecu(p.id_paiement, p.id_etudiant)}
+                        >
+                          <FileText size={12}/> Reçu
+                        </button>
+                      )}
+                      {peutPayer && !isPaye && (
+                        <button className="btn btn-primary btn-sm" onClick={() => onPayer(p)}>
+                          <Banknote size={12}/> Payer
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -269,13 +323,25 @@ export default function Paiements() {
             Paiements <span className="count-badge">{etudiants.length}</span>
           </h1>
         </div>
-        <div className="tabs">
-          <button className={`tab ${onglet==="liste"?"actif":""}`} onClick={()=>setOnglet("liste")}>
-            <ReceiptText size={14}/> Liste étudiants
-          </button>
-          <button className={`tab ${onglet==="retards"?"actif":""}`} onClick={()=>setOnglet("retards")}>
-            <AlertCircle size={14}/> En retard
-            {retards.length > 0 && <span className="count-badge" style={{background:"var(--red-soft)",color:"var(--red)"}}>{retards.length}</span>}
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <div className="tabs">
+            <button className={`tab ${onglet==="liste"?"actif":""}`} onClick={()=>setOnglet("liste")}>
+              <ReceiptText size={14}/> Liste étudiants
+            </button>
+            <button className={`tab ${onglet==="retards"?"actif":""}`} onClick={()=>setOnglet("retards")}>
+              <AlertCircle size={14}/> En retard
+              {retards.length > 0 && <span className="count-badge" style={{background:"var(--red-soft)",color:"var(--red)"}}>{retards.length}</span>}
+            </button>
+          </div>
+          <button className="btn btn-secondary"
+            onClick={() => {
+              if (onglet === "liste") {
+                exporterExcel(paiements, COLONNES_PAIEMENTS, "Paiements_CampusPro", "Paiements");
+              } else {
+                exporterExcel(retards, COLONNES_RETARDS, "Retards_Paiements", "Retards");
+              }
+            }}>
+            <Download size={15}/> Exporter Excel
           </button>
         </div>
       </div>

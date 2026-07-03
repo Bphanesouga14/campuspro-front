@@ -139,7 +139,17 @@ export const dashboardService = {
     const res = await api.get("/dashboard");
     return res.data;
   },
+
+  
+  
+  analytique: async () => {
+    const res = await api.get("/dashboard/analytique");
+    return res.data;
+  },
 };
+
+
+
 
 // ── IMPORT EXCEL ─────────────────────────────────────────────
 export const importService = {

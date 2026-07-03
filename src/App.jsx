@@ -1,3 +1,7 @@
+
+import Absences from "./pages/Absences";
+
+
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider }  from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -34,6 +38,9 @@ export default function App() {
               <Route path="utilisateurs" element={<Utilisateurs/>}/>
               <Route path="notifications" element={<Notifications/>}/>
               <Route path="parametres"   element={<Parametres/>}/>
+
+              <Route path="absences" element={<Absences/>}/>
+              
             </Route>
             <Route path="*" element={<Navigate to="/accueil" replace/>}/>
           </Routes>

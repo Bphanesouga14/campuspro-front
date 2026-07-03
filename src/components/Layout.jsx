@@ -6,7 +6,7 @@ import Footer from "./Footer";
 import {
   LayoutDashboard, GraduationCap, CreditCard, BookOpen,
   QrCode, Upload, Users, LogOut, PanelLeftClose, PanelLeftOpen,
-  Bell, Settings
+  Bell, Settings, UserX
 } from "lucide-react";
 
 const NAV = [
@@ -15,6 +15,7 @@ const NAV = [
   { to:"/paiements",     Icon:CreditCard,      label:"Paiements" },
   { to:"/specialites",   Icon:BookOpen,        label:"Spécialités" },
   { to:"/qrcodes",       Icon:QrCode,          label:"QR Codes" },
+  { to:"/absences", Icon:UserX,                label:"Absences", roles:["ADMIN","SECRETAIRE"] },
   { to:"/import",        Icon:Upload,          label:"Import Excel",   roles:["ADMIN","SECRETAIRE"] },
   { to:"/utilisateurs",  Icon:Users,           label:"Utilisateurs",   roles:["ADMIN"] },
   { to:"/notifications", Icon:Bell,            label:"Notifications" },

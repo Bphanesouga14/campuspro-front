@@ -1,3 +1,5 @@
+import GraphiquesDashboard from "../components/GraphiquesDashboard";
+
 import { useState, useEffect } from "react";
 import { dashboardService } from "../api/services";
 import { useAuth } from "../context/AuthContext";
@@ -135,9 +137,13 @@ function NotificationsRecentes({ role }) {
           })}
         </div>
       )}
+
+
     </div>
   );
 }
+
+
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -193,6 +199,12 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Graphiques analytiques — AU DESSUS des notifications */}
+      <div style={{marginTop:"1.5rem"}}>
+        <GraphiquesDashboard/>
+      </div>
+
+      {/* Notifications récentes — EN DESSOUS des graphiques */}
       <div style={{marginTop:"1.5rem"}}>
         <NotificationsRecentes role={role}/>
       </div>

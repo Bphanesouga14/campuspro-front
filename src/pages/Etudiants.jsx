@@ -1,3 +1,8 @@
+
+
+import { exporterExcel, COLONNES_ETUDIANTS } from "../utils/exportExcel";
+
+
 import { useState, useEffect, useRef } from "react";
 import { etudiantService, specialiteService, paiementService, profilService } from "../api/services";
 import { useAuth } from "../context/AuthContext";
@@ -334,11 +339,22 @@ export default function Etudiants() {
         <div>
           <h1>Étudiants <span className="count-badge">{etudiants.length}</span></h1>
         </div>
-        {peutModifier && (
-          <button className="btn btn-primary" onClick={() => { setCourant(null); setModal("creer"); }}>
-            <Plus size={15}/> Nouvel étudiant
-          </button>
-        )}
+
+        
+          <div style={{display:"flex",gap:8}}>
+            <button className="btn btn-secondary"
+              onClick={() => exporterExcel(filtres, COLONNES_ETUDIANTS, "Etudiants_CampusPro", "Étudiants")}>
+              <Download size={15}/> Exporter Excel
+            </button>
+            {peutModifier && (
+              <button className="btn btn-primary"
+                onClick={() => { setCourant(null); setModal("creer"); }}>
+                <Plus size={15}/> Nouvel étudiant
+              </button>
+            )}
+          </div>
+
+
       </div>
 
       <div className="toolbar">

@@ -1,9 +1,15 @@
+
+
+import { exporterExcel, COLONNES_SPECIALITES } from "../utils/exportExcel";
+
+
+
 import { useState, useEffect } from "react";
 import { specialiteService } from "../api/services";
 import { useAuth } from "../context/AuthContext";
 import {
   BookOpen, Plus, Search, Pencil, X, Layers,
-  DollarSign, Calendar, GraduationCap, ChevronRight, Eye
+  DollarSign, Calendar, GraduationCap, ChevronRight, Eye, Download
 } from "lucide-react";
 
 const fmt = (n) => new Intl.NumberFormat("fr-FR").format(n);
@@ -179,11 +185,18 @@ export default function Specialites() {
         <h1><BookOpen size={22} style={{marginRight:8,verticalAlign:"middle"}}/>
           Spécialités <span className="count-badge">{specialites.length}</span>
         </h1>
-        {peutModifier && (
-          <button className="btn btn-primary" onClick={()=>{setCourant(null);setModal("form");}}>
-            <Plus size={15}/> Nouvelle spécialité
+        <div style={{display:"flex",gap:8}}>
+          <button className="btn btn-secondary"
+            onClick={() => exporterExcel(filtres, COLONNES_SPECIALITES, "Specialites_CampusPro", "Spécialités")}>
+            <Download size={15}/> Exporter Excel
           </button>
-        )}
+          {peutModifier && (
+            <button className="btn btn-primary"
+              onClick={() => {setCourant(null); setModal("form");}}>
+              <Plus size={15}/> Nouvelle spécialité
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="toolbar" style={{marginBottom:"1.5rem"}}>

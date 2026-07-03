@@ -1679,3 +1679,28 @@ code { background: var(--bg2); padding: 2px 7px; border-radius: 5px; font-size: 
 }
 .param-langue-card:hover { border-color: var(--primary); }
 .param-langue-card.actif { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+
+
+
+
+
+/* ── Graphiques Dashboard ──────────────────────────────────── */
+.graphiques-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+[data-theme="emeraude"] .graphiques-card {
+  background: rgba(255,255,255,0.05);
+}
+.graphiques-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
