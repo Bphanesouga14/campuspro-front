@@ -104,7 +104,7 @@ function FormulaireEtudiant({ etudiant, specialites, onSuccess, onFermer }) {
 }
 
 // ── Fiche détail étudiant ─────────────────────────────────────
-function FicheEtudiant({ etudiant, specialites, onModifier, onSupprimer, onFermer, peutModifier, peutSupprimer }) {
+function FicheEtudiant({ etudiant, specialites, onModifier, onSupprimer, onFermer, peutModifier, peutSupprimer, onPhotoMaj }) {
   const [onglet, setOnglet]   = useState("infos");
   const [paiements, setPai]   = useState([]);
   const [qrSrc, setQrSrc]     = useState(null);
@@ -119,9 +119,10 @@ function FicheEtudiant({ etudiant, specialites, onModifier, onSupprimer, onFerme
     try {
       const res = await profilService.uploaderPhotoEtudiant(etudiant.id_etudiant, f);
       setPhoto(res.photo);
-      // Forcer rechargement du QR code (il inclut maintenant la photo)
-      setQrSrc(null);
-    } catch (err) { alert(err.response?.data?.detail || "Erreur upload."); }
+      setQrSrc(null); // Régénérer le QR avec la nouvelle photo
+      // Mettre à jour cet étudiant dans la liste parente
+      onPhotoMaj(etudiant.id_etudiant, res.photo);
+    }  catch (err) { alert(err.response?.data?.detail || "Erreur upload."); }
   };
 
   useEffect(() => {
@@ -364,7 +365,21 @@ export default function Etudiants() {
                   onClick={() => setFiche(e)} style={{cursor:"pointer"}}>
                   <td>
                     <div className="table-user">
-                      <div className="table-avatar">{e.prenom?.[0]}{e.nom?.[0]}</div>
+                      {e.photo ? (
+                        <img
+                          src={e.photo}
+                          alt={e.nom}
+                          style={{
+                            width: 34, height: 34, borderRadius: "50%",
+                            objectFit: "cover", flexShrink: 0,
+                            border: "1.5px solid var(--border)"
+                          }}
+                        />
+                      ) : (
+                        <div className="table-avatar">
+                          {e.prenom?.[0]}{e.nom?.[0]}
+                        </div>
+                      )}
                       <div>
                         <div className="table-name">{e.nom} {e.prenom}</div>
                         <div className="table-sub">{e.sexe === "M" ? "Masculin" : "Féminin"}</div>
@@ -403,11 +418,21 @@ export default function Etudiants() {
       {/* Fiche détail */}
       {fiche && (
         <FicheEtudiant
-          etudiant={fiche} specialites={specialites}
-          peutModifier={peutModifier} peutSupprimer={peutSupprimer}
+          etudiant={fiche}
+          specialites={specialites}
+          peutModifier={peutModifier}
+          peutSupprimer={peutSupprimer}
           onModifier={() => { setCourant(fiche); setFiche(null); setModal("modifier"); }}
           onSupprimer={() => supprimer(fiche)}
           onFermer={() => setFiche(null)}
+          onPhotoMaj={(id, photo) => {
+            // Met à jour la photo dans la liste locale sans recharger tout
+            setEtudiants(prev =>
+              prev.map(e => e.id_etudiant === id ? { ...e, photo } : e)
+            );
+            // Met aussi à jour la fiche ouverte
+            setFiche(prev => prev ? { ...prev, photo } : prev);
+          }}
         />
       )}
 

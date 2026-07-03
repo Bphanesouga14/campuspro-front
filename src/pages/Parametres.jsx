@@ -60,6 +60,7 @@ function AvatarUpload({ photo, nom, onPhotoChange }) {
 
 // ── Onglet Profil ─────────────────────────────────────────────
 function OngletProfil({ utilisateur, onUpdate }) {
+  const { mettreAJourPhoto } = useAuth();
   const [photo, setPhoto]   = useState(null);
   const [form, setForm]     = useState({ nom: utilisateur.nom, email: utilisateur.email });
   const [mdp, setMdp]       = useState({ actuel:"", nouveau:"", confirmer:"" });
@@ -76,10 +77,12 @@ function OngletProfil({ utilisateur, onUpdate }) {
   }, []);
 
   const handlePhotoChange = (dataUrl) => {
-    setPhoto(dataUrl);
-    setSucces("Photo mise à jour avec succès !");
-    setTimeout(() => setSucces(""), 3000);
-  };
+  setPhoto(dataUrl);
+  // Mettre à jour la photo dans le contexte global → sidebar se met à jour
+  mettreAJourPhoto(dataUrl);
+  setSucces("Photo mise à jour avec succès !");
+  setTimeout(() => setSucces(""), 3000);
+};
 
   const sauvegarder = async () => {
     setErreur(""); setSucces(""); setLoad(true);

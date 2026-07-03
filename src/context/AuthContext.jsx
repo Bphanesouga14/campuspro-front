@@ -32,12 +32,21 @@ export function AuthProvider({ children }) {
   }, []);
 
   // Appelée après un login réussi
-  const connecter = (tokenRecu, userRecu) => {
-    localStorage.setItem("token", tokenRecu);
-    localStorage.setItem("utilisateur", JSON.stringify(userRecu));
-    setToken(tokenRecu);
-    setUtilisateur(userRecu);
-  };
+ const connecter = (tokenRecu, userRecu) => {
+  localStorage.setItem("token", tokenRecu);
+  localStorage.setItem("utilisateur", JSON.stringify(userRecu));
+  setToken(tokenRecu);
+  setUtilisateur(userRecu);
+};
+
+// Mise à jour de la photo sans déconnecter
+const mettreAJourPhoto = (photoDataUrl) => {
+  setUtilisateur(prev => {
+    const updated = { ...prev, photo: photoDataUrl };
+    localStorage.setItem("utilisateur", JSON.stringify(updated));
+    return updated;
+  });
+};
 
   // Appelée lors de la déconnexion
   const deconnecter = () => {
@@ -54,11 +63,12 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{
-      utilisateur, token, chargement,
-      connecter, deconnecter, aLeRole,
-      estConnecte: !!token,
-    }}>
+  <AuthContext.Provider value={{
+    utilisateur, token, chargement,
+    connecter, deconnecter, aLeRole,
+    mettreAJourPhoto,
+    estConnecte: !!token,
+  }}>
       {children}
     </AuthContext.Provider>
   );

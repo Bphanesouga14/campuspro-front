@@ -6,6 +6,59 @@
 /* ── Google Fonts ─────────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
+
+
+/* ── Bouton notification topbar ────────────────────────────── */
+.app-topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notif-topbar-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  color: var(--text2);
+  box-shadow: var(--shadow);
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.notif-topbar-btn:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(79,124,247,0.4);
+  transform: scale(1.08);
+}
+
+.notif-topbar-btn.actif {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+[data-theme="emeraude"] .notif-topbar-btn {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7);
+}
+
+[data-theme="emeraude"] .notif-topbar-btn:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: 0 4px 16px rgba(0,214,143,0.4);
+}
+
+
+
 /* ══════════════════════════════════════════════════════════
    THÈME LUMIÈRE — Inspiré Image 1 (clair, coloré, moderne)
    ══════════════════════════════════════════════════════════ */

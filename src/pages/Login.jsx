@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { authService } from "../api/services";
 import { useAuth } from "../context/AuthContext";
 import SelecteurTheme from "../components/SelecteurTheme";
 import {
@@ -8,7 +7,7 @@ import {
   Loader2, Eye, EyeOff, ArrowLeft, AlertCircle, X
 } from "lucide-react";
 
-// ── Modal "Mot de passe oublié" ───────────────────────────────
+// ── Modal mot de passe oublié ─────────────────────────────────
 function ModalMotDePasseOublie({ onFermer }) {
   return (
     <div className="modal-overlay">
@@ -21,38 +20,17 @@ function ModalMotDePasseOublie({ onFermer }) {
           <button className="btn-close" onClick={onFermer}><X size={16}/></button>
         </div>
         <div className="modal-body">
-          <div style={{
-            background:"var(--orange-soft)", borderRadius:10,
-            padding:"1rem", marginBottom:"1rem",
-            display:"flex", gap:10, alignItems:"flex-start"
-          }}>
-            <AlertCircle size={18} style={{color:"var(--orange)",flexShrink:0,marginTop:2}}/>
+          <div style={{background:"var(--orange-soft)",borderRadius:10,
+            padding:"1rem",marginBottom:"1rem",display:"flex",gap:10}}>
+            <AlertCircle size={18} style={{color:"var(--orange)",flexShrink:0}}/>
             <p style={{fontSize:"0.87rem",color:"var(--text)",lineHeight:1.6}}>
-              La réinitialisation du mot de passe n'est pas disponible en libre-service
-              pour des raisons de sécurité.
+              Contactez l'administrateur CampusPro de votre établissement.
             </p>
           </div>
-          <p style={{fontSize:"0.88rem",color:"var(--text2)",lineHeight:1.7,marginBottom:"1.25rem"}}>
-            Pour récupérer l'accès à votre compte, veuillez contacter
-            l'<strong style={{color:"var(--text)"}}>administrateur de CampusPro</strong>
-            de votre établissement en lui fournissant :
-          </p>
-          <div style={{
-            background:"var(--bg2)", borderRadius:10, padding:"1rem",
-            display:"flex", flexDirection:"column", gap:8, marginBottom:"1.25rem"
-          }}>
-            {["Votre nom complet","Votre adresse email","Votre rôle (Secrétaire ou Caissier)"].map((item,i)=>(
-              <div key={i} style={{display:"flex",alignItems:"center",gap:8,fontSize:"0.85rem",color:"var(--text)"}}>
-                <div style={{width:6,height:6,borderRadius:"50%",background:"var(--primary)",flexShrink:0}}/>
-                {item}
-              </div>
-            ))}
-          </div>
-          <p style={{fontSize:"0.78rem",color:"var(--text3)",textAlign:"center"}}>
-            L'administrateur réinitialisera votre mot de passe via la page Utilisateurs.
-          </p>
-          <div className="modal-footer" style={{borderTop:"none",paddingTop:"0.5rem"}}>
-            <button className="btn btn-primary" onClick={onFermer} style={{width:"100%",justifyContent:"center"}}>
+          <div className="modal-footer" style={{borderTop:"none",paddingTop:0}}>
+            <button className="btn btn-primary"
+              onClick={onFermer}
+              style={{width:"100%",justifyContent:"center"}}>
               Compris
             </button>
           </div>
@@ -62,24 +40,58 @@ function ModalMotDePasseOublie({ onFermer }) {
   );
 }
 
+// ── Page Login ────────────────────────────────────────────────
 export default function Login() {
-  const [email, setEmail]         = useState("");
-  const [mdp, setMdp]             = useState("");
-  const [voirMdp, setVoirMdp]     = useState(false);
-  const [erreur, setErreur]       = useState("");
-  const [load, setLoad]           = useState(false);
-  const [modalMdp, setModalMdp]   = useState(false);
-  const { connecter }             = useAuth();
-  const navigate                  = useNavigate();
+  const [etape, setEtape]       = useState(1);
+  const [email, setEmail]       = useState("");
+  const [mdp, setMdp]           = useState("");
+  const [voirMdp, setVoirMdp]   = useState(false);
+  const [code, setCode]         = useState("");
+  const [msgEmail, setMsgEmail] = useState("");
+  const [emailSaisi, setEmailS] = useState("");
+  const [erreur, setErreur]     = useState("");
+  const [load, setLoad]         = useState(false);
+  const [modalMdp, setModalMdp] = useState(false);
 
-  const submit = async (e) => {
-    e.preventDefault(); setErreur(""); setLoad(true);
+  const { connecter } = useAuth();
+  const navigate      = useNavigate();
+
+  // Étape 1 : vérifier email + mdp → envoyer code
+  const submitLogin = async (e) => {
+    e.preventDefault();
+    setErreur(""); setLoad(true);
     try {
-      const d = await authService.login(email, mdp);
-      connecter(d.access_token, d.utilisateur);
+      const res = await fetch("http://127.0.0.1:8000/api/v1/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, mot_de_passe: mdp }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Erreur de connexion.");
+      setEmailS(email);
+      setMsgEmail(data.message);
+      setEtape(2);
+    } catch (err) {
+      setErreur(err.message);
+    } finally { setLoad(false); }
+  };
+
+  // Étape 2 : vérifier le code 2FA → obtenir token
+  const submitCode = async (e) => {
+    e.preventDefault();
+    setErreur(""); setLoad(true);
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/auth/verifier", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailSaisi, code }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Code incorrect.");
+      connecter(data.access_token, data.utilisateur);
       navigate("/");
     } catch (err) {
-      setErreur(err.response?.data?.detail || "Email ou mot de passe incorrect.");
+      setErreur(err.message);
     } finally { setLoad(false); }
   };
 
@@ -91,7 +103,6 @@ export default function Login() {
         <div className="shape shape-3"/>
       </div>
 
-      {/* Bouton thème */}
       <div className="login-theme-btn"><SelecteurTheme/></div>
 
       <div className="login-card">
@@ -102,82 +113,143 @@ export default function Login() {
           </div>
           <div>
             <h1 className="login-title">CampusPro</h1>
-            <p className="login-subtitle">Gestion des étudiants, paiements & QR codes</p>
+            <p className="login-subtitle">
+              Gestion des étudiants, paiements & QR codes
+            </p>
           </div>
         </div>
 
         <div className="login-divider"/>
 
-        {/* Formulaire */}
-        <form onSubmit={submit} className="login-form">
-          {/* Email */}
-          <div className="field">
-            <label>Adresse email</label>
-            <div className="field-input-wrap">
-              <Mail size={15} className="field-icon-svg"/>
-              <input type="email" value={email}
-                onChange={e=>setEmail(e.target.value)}
-                placeholder="admin@ecole.cm" required autoFocus/>
+        {/* ── Étape 1 : email + mot de passe ── */}
+        {etape === 1 && (
+          <form onSubmit={submitLogin} className="login-form">
+            <div className="field">
+              <label>Adresse email</label>
+              <div className="field-input-wrap">
+                <Mail size={15} className="field-icon-svg"/>
+                <input
+                  type="email" value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="admin@ecole.cm"
+                  required autoFocus
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Mot de passe avec oeil */}
-          <div className="field">
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <label>Mot de passe</label>
-              <button type="button" className="login-forgot-link"
-                onClick={() => setModalMdp(true)}>
-                Mot de passe oublié ?
-              </button>
+            <div className="field">
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <label>Mot de passe</label>
+                <button type="button" className="login-forgot-link"
+                  onClick={() => setModalMdp(true)}>
+                  Mot de passe oublié ?
+                </button>
+              </div>
+              <div className="field-input-wrap">
+                <Lock size={15} className="field-icon-svg"/>
+                <input
+                  type={voirMdp ? "text" : "password"}
+                  value={mdp}
+                  onChange={e => setMdp(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  style={{paddingRight:"2.8rem"}}
+                />
+                <button type="button" className="field-eye-btn"
+                  onClick={() => setVoirMdp(!voirMdp)}>
+                  {voirMdp ? <EyeOff size={15}/> : <Eye size={15}/>}
+                </button>
+              </div>
             </div>
-            <div className="field-input-wrap">
-              <Lock size={15} className="field-icon-svg"/>
+
+            {erreur && (
+              <div className="login-error">
+                <AlertCircle size={14}/> {erreur}
+              </div>
+            )}
+
+            <button type="submit" className="login-btn" disabled={load}>
+              {load
+                ? <><Loader2 size={16} className="spin"/> Vérification...</>
+                : <>Continuer <ArrowRight size={16}/></>}
+            </button>
+          </form>
+        )}
+
+        {/* ── Étape 2 : code 2FA ── */}
+        {etape === 2 && (
+          <form onSubmit={submitCode} className="login-form">
+            <div style={{textAlign:"center",marginBottom:"1.25rem"}}>
+              <div style={{fontSize:"3rem",marginBottom:"0.5rem"}}>📧</div>
+              <p style={{fontWeight:700,fontSize:"1rem",color:"var(--text)"}}>
+                Vérification en deux étapes
+              </p>
+              <p style={{fontSize:"0.83rem",color:"var(--text2)",marginTop:6,lineHeight:1.5}}>
+                {msgEmail}
+              </p>
+            </div>
+
+            <div className="field">
+              <label>Code à 6 chiffres</label>
               <input
-                type={voirMdp ? "text" : "password"}
-                value={mdp}
-                onChange={e=>setMdp(e.target.value)}
-                placeholder="••••••••"
+                type="text"
+                value={code}
+                onChange={e => setCode(e.target.value.replace(/\D/g,"").slice(0,6))}
+                placeholder="000000"
+                maxLength={6}
                 required
-                style={{paddingRight:"2.8rem"}}
+                autoFocus
+                style={{
+                  textAlign:"center",
+                  fontSize:"2rem",
+                  letterSpacing:"0.6em",
+                  fontWeight:800,
+                  padding:"0.85rem",
+                }}
               />
-              {/* Bouton voir/cacher le mot de passe */}
-              <button type="button" className="field-eye-btn"
-                onClick={() => setVoirMdp(!voirMdp)}
-                title={voirMdp ? "Cacher le mot de passe" : "Voir le mot de passe"}>
-                {voirMdp ? <EyeOff size={15}/> : <Eye size={15}/>}
-              </button>
+              <p style={{fontSize:"0.75rem",color:"var(--text3)",marginTop:6,textAlign:"center"}}>
+                Valable 10 minutes · Vérifie tes spams si absent
+              </p>
             </div>
-          </div>
 
-          {/* Erreur */}
-          {erreur && (
-            <div className="login-error">
-              <AlertCircle size={14}/> {erreur}
-            </div>
-          )}
+            {erreur && (
+              <div className="login-error">
+                <AlertCircle size={14}/> {erreur}
+              </div>
+            )}
 
-          {/* Bouton connexion */}
-          <button type="submit" className="login-btn" disabled={load}>
-            {load
-              ? <><Loader2 size={16} className="spin"/> Connexion en cours...</>
-              : <>Se connecter <ArrowRight size={16}/></>}
-          </button>
-        </form>
+            <button type="submit" className="login-btn"
+              disabled={load || code.length !== 6}>
+              {load
+                ? <><Loader2 size={16} className="spin"/> Vérification...</>
+                : <>Se connecter <ArrowRight size={16}/></>}
+            </button>
 
-        {/* Retour page d'accueil */}
+            <button type="button"
+              onClick={() => { setEtape(1); setCode(""); setErreur(""); }}
+              style={{
+                display:"flex",alignItems:"center",justifyContent:"center",
+                gap:6,width:"100%",marginTop:"0.5rem",
+                background:"none",border:"none",cursor:"pointer",
+                fontSize:"0.83rem",color:"var(--text2)",padding:"0.5rem",
+              }}>
+              <ArrowLeft size={14}/> Retour
+            </button>
+          </form>
+        )}
+
+        {/* Retour accueil */}
         <div className="login-back">
           <Link to="/accueil" className="login-back-link">
             <ArrowLeft size={14}/> Retour à l'accueil
           </Link>
         </div>
 
-        {/* Footer droits réservés */}
         <div className="login-footer-copy">
           © {new Date().getFullYear()} CampusPro — Tous droits réservés
         </div>
       </div>
 
-      {/* Modal mot de passe oublié */}
       {modalMdp && <ModalMotDePasseOublie onFermer={() => setModalMdp(false)}/>}
     </div>
   );

@@ -109,8 +109,22 @@ export default function Utilisateurs() {
                   <tr key={u.id_utilisateur}>
                     <td>
                       <div className="table-user">
-                        <div className="table-avatar" style={{background:`var(--${meta.cl})`}}>
-                          {u.nom?.[0]?.toUpperCase()}
+                        <div className="table-avatar" style={{borderRadius: "50%", background:`var(--${meta.cl})`}}>
+                          {u.photo ? (
+                            <img
+                              src={u.photo}
+                              alt={u.nom}
+                              style={{
+                                width: 34, height: 34, borderRadius: "50%",
+                                objectFit: "cover", flexShrink: 0,
+                                border: `2px solid var(--${meta.cl})`
+                              }}
+                            />
+                          ) : (
+                            <div className="table-avatar" style={{background:`var(--${meta.cl})`}}>
+                              {u.nom?.[0]?.toUpperCase()}
+                            </div>
+                          )}
                         </div>
                         <div>
                           <div className="table-name">{u.nom}</div>

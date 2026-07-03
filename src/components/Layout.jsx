@@ -63,7 +63,22 @@ export default function Layout() {
 
         <div className="sidebar-footer">
           <div className="sidebar-user">
-            <div className="user-avatar">{utilisateur?.nom?.[0]?.toUpperCase()}</div>
+            {/* Avatar : photo réelle ou initiale */}
+            {utilisateur?.photo ? (
+              <img
+                src={utilisateur.photo}
+                alt="profil"
+                style={{
+                  width: 36, height: 36, borderRadius: "50%",
+                  objectFit: "cover", flexShrink: 0,
+                  border: "2px solid var(--primary)"
+                }}
+              />
+            ) : (
+              <div className="user-avatar">
+                {utilisateur?.nom?.[0]?.toUpperCase()}
+          </div>
+            )}
             {!reduit && (
               <div className="user-info">
                 <div className="user-name">{utilisateur?.nom}</div>
@@ -79,10 +94,15 @@ export default function Layout() {
       </aside>
 
       <main className="main">
-        <div className="app-topbar"><SelecteurTheme/></div>
+        {/* Header fixe en haut à droite */}
+        <div className="app-topbar">
+          <NavLink to="/notifications" className="notif-topbar-btn" title="Notifications">
+            <Bell size={18}/>
+          </NavLink>
+          <SelecteurTheme/>
+        </div>
         <div className="main-inner">
           <Outlet/>
-          <Footer/>
         </div>
       </main>
     </div>
