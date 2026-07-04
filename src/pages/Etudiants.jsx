@@ -189,6 +189,28 @@ function FicheEtudiant({ etudiant, specialites, onModifier, onSupprimer, onFerme
             <p>{etudiant.matricule} · {etudiant.code_specialite} · Niveau {etudiant.niveau}</p>
           </div>
           <div className="fiche-actions">
+            
+              {/* Bouton carte étudiant PDF */}
+              <button className="btn btn-secondary btn-sm"
+                title="Télécharger la carte étudiant"
+                onClick={async () => {
+                  const token = localStorage.getItem("token");
+                  const res   = await fetch(
+                    `http://127.0.0.1:8000/api/v1/etudiants/${etudiant.id_etudiant}/carte`,
+                    { headers:{ "Authorization":`Bearer ${token}` } }
+                  );
+                  if (!res.ok) { alert("Erreur génération carte."); return; }
+                  const blob = await res.blob();
+                  const url  = URL.createObjectURL(blob);
+                  const a    = document.createElement("a");
+                  a.href     = url;
+                  a.download = `Carte_${etudiant.matricule}.pdf`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}>
+                <CreditCard size={13}/> Carte PDF
+              </button>
+  
             {peutModifier && (
               <button className="btn btn-secondary btn-sm" onClick={onModifier}>
                 <Pencil size={13}/> Modifier

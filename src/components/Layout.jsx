@@ -9,18 +9,44 @@ import {
   Bell, Settings, UserX
 } from "lucide-react";
 
-const NAV = [
-  { to:"/",              Icon:LayoutDashboard, label:"Tableau de bord" },
-  { to:"/etudiants",     Icon:GraduationCap,   label:"Étudiants" },
-  { to:"/paiements",     Icon:CreditCard,      label:"Paiements" },
-  { to:"/specialites",   Icon:BookOpen,        label:"Spécialités" },
-  { to:"/qrcodes",       Icon:QrCode,          label:"QR Codes" },
-  { to:"/absences", Icon:UserX,                label:"Absences", roles:["ADMIN","SECRETAIRE"] },
-  { to:"/import",        Icon:Upload,          label:"Import Excel",   roles:["ADMIN","SECRETAIRE"] },
-  { to:"/utilisateurs",  Icon:Users,           label:"Utilisateurs",   roles:["ADMIN"] },
-  { to:"/notifications", Icon:Bell,            label:"Notifications" },
-  { to:"/parametres",    Icon:Settings,        label:"Paramètres" },
+const SECTIONS = [
+  {
+    titre: "Principal",
+    items: [
+      { to:"/", Icon:LayoutDashboard, label:"Tableau de bord" },
+    ]
+  },
+  {
+    titre: "Gestion",
+    items: [
+      { to:"/etudiants",   Icon:GraduationCap, label:"Étudiants" },
+      { to:"/paiements",   Icon:CreditCard,    label:"Paiements" },
+      { to:"/specialites", Icon:BookOpen,      label:"Spécialités" },
+    ]
+  },
+  {
+    titre: "Suivi",
+    items: [
+      { to:"/qrcodes",  Icon:QrCode, label:"QR Codes" },
+      { to:"/absences", Icon:UserX,  label:"Absences", roles:["ADMIN","SECRETAIRE"] },
+    ]
+  },
+  {
+    titre: "Administration",
+    items: [
+      { to:"/import",       Icon:Upload, label:"Import Excel",  roles:["ADMIN","SECRETAIRE"] },
+      { to:"/utilisateurs", Icon:Users,  label:"Utilisateurs",  roles:["ADMIN"] },
+    ]
+  },
+  {
+    titre: "Système",
+    items: [
+      { to:"/notifications", Icon:Bell,     label:"Notifications" },
+      { to:"/parametres",    Icon:Settings, label:"Paramètres" },
+    ]
+  },
 ];
+
 
 export default function Layout() {
   const { utilisateur, deconnecter, aLeRole } = useAuth();
@@ -41,16 +67,29 @@ export default function Layout() {
         </div>
 
         <nav className="sidebar-nav">
-          {NAV.map(({to,Icon,label,roles})=>{
-            if (roles && !aLeRole(...roles)) return null;
+          {SECTIONS.map(section => {
+            // Filtrer les items accessibles
+            const itemsVisibles = section.items.filter(item =>
+              !item.roles || aLeRole(...item.roles)
+            );
+            if (itemsVisibles.length === 0) return null;
+
             return (
-              <NavLink key={to} to={to} end={to==="/"}
-                className={({isActive})=>`nav-link ${isActive?"actif":""}`}
-                title={reduit?label:undefined}>
-                <Icon size={18} className="nav-icon"/>
-                {!reduit && <span className="nav-label">{label}</span>}
-                {!reduit && <span className="nav-indicator"/>}
-              </NavLink>
+              <div key={section.titre} className="nav-section">
+                {/* Titre de section — caché si sidebar réduite */}
+                {!reduit && (
+                  <div className="nav-section-titre">{section.titre}</div>
+                )}
+                {itemsVisibles.map(({ to, Icon, label }) => (
+                  <NavLink key={to} to={to} end={to==="/"}
+                    className={({isActive}) => `nav-link ${isActive?"actif":""}`}
+                    title={reduit ? label : undefined}>
+                    <Icon size={18} className="nav-icon"/>
+                    {!reduit && <span className="nav-label">{label}</span>}
+                    {!reduit && <span className="nav-indicator"/>}
+                  </NavLink>
+                ))}
+              </div>
             );
           })}
         </nav>
