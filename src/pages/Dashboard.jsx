@@ -166,9 +166,9 @@ export default function Dashboard() {
           <h1 className="page-greeting">{salut}, {utilisateur?.nom}</h1>
           <p className="page-sub">Récapitulatif de votre établissement</p>
         </div>
-        <div className="page-date">
+        {/*<div className="page-date">
           {new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})}
-        </div>
+        </div>*/}
       </div>
 
       <div className="stats-row">

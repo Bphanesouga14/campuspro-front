@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import SelecteurTheme from "./SelecteurTheme";
-import Footer from "./Footer";
+import { useTheme } from "../context/ThemeContext";
 import {
   LayoutDashboard, GraduationCap, CreditCard, BookOpen,
-  QrCode, Upload, Users, LogOut, PanelLeftClose, PanelLeftOpen,
-  Bell, Settings, UserX
+  QrCode, Upload, Users, LogOut, Bell, Settings,
+  UserX, Menu, Monitor, Sun, Leaf
 } from "lucide-react";
 
 const SECTIONS = [
@@ -47,17 +46,41 @@ const SECTIONS = [
   },
 ];
 
+const THEMES = [
+  { id:"lumiere",  label:"Clair",    Icon:Sun  },
+  { id:"emeraude", label:"Sombre",   Icon:Leaf },
+];
 
 export default function Layout() {
   const { utilisateur, deconnecter, aLeRole } = useAuth();
-  const navigate = useNavigate();
-  const [reduit, setReduit] = useState(false);
+  const { theme, setTheme }                   = useTheme();
+  const navigate                               = useNavigate();
+  const [reduit, setReduit]                   = useState(false);
+
+  const maintenant = new Date();
+  const dateStr = maintenant.toLocaleDateString("fr-FR", {
+    weekday:"long", day:"numeric", month:"long", year:"numeric"
+  });
 
   return (
     <div className={`app ${reduit?"sidebar-reduite":""}`}>
+
+      {/* ══ SIDEBAR ══ */}
       <aside className="sidebar">
+
+        {/* Bouton toggle — tout en haut 
+        <button
+          className="sidebar-toggle-top"
+          onClick={() => setReduit(!reduit)}
+          title={reduit ? "Agrandir" : "Réduire"}>
+          <Menu size={18}/>
+        </button> */}
+
+        {/* Logo */}
         <div className="sidebar-logo">
-          <div className="logo-icon"><GraduationCap size={22} color="white"/></div>
+          <div className="logo-icon">
+            <GraduationCap size={20} color="white"/>
+          </div>
           {!reduit && (
             <div className="logo-text-group">
               <span className="logo-text">CampusPro</span>
@@ -66,25 +89,23 @@ export default function Layout() {
           )}
         </div>
 
+        {/* Navigation par sections */}
         <nav className="sidebar-nav">
           {SECTIONS.map(section => {
-            // Filtrer les items accessibles
-            const itemsVisibles = section.items.filter(item =>
+            const visibles = section.items.filter(item =>
               !item.roles || aLeRole(...item.roles)
             );
-            if (itemsVisibles.length === 0) return null;
-
+            if (visibles.length === 0) return null;
             return (
               <div key={section.titre} className="nav-section">
-                {/* Titre de section — caché si sidebar réduite */}
                 {!reduit && (
                   <div className="nav-section-titre">{section.titre}</div>
                 )}
-                {itemsVisibles.map(({ to, Icon, label }) => (
+                {visibles.map(({ to, Icon, label }) => (
                   <NavLink key={to} to={to} end={to==="/"}
                     className={({isActive}) => `nav-link ${isActive?"actif":""}`}
                     title={reduit ? label : undefined}>
-                    <Icon size={18} className="nav-icon"/>
+                    <Icon size={17} className="nav-icon"/>
                     {!reduit && <span className="nav-label">{label}</span>}
                     {!reduit && <span className="nav-indicator"/>}
                   </NavLink>
@@ -94,30 +115,20 @@ export default function Layout() {
           })}
         </nav>
 
-        <div className="sidebar-collapse-btn-wrap">
-          <button className="sidebar-collapse-btn" onClick={()=>setReduit(!reduit)}
-            title={reduit?"Agrandir":"Réduire"}>
-            {reduit ? <PanelLeftOpen size={16}/> : <><PanelLeftClose size={16}/>{" Réduire"}</>}
-          </button>
-        </div>
-
+        {/* Footer utilisateur */}
         <div className="sidebar-footer">
           <div className="sidebar-user">
-            {/* Avatar : photo réelle ou initiale */}
             {utilisateur?.photo ? (
-              <img
-                src={utilisateur.photo}
-                alt="profil"
+              <img src={utilisateur.photo} alt="profil"
                 style={{
-                  width: 36, height: 36, borderRadius: "50%",
-                  objectFit: "cover", flexShrink: 0,
-                  border: "2px solid var(--primary)"
-                }}
-              />
+                  width:34, height:34, borderRadius:"50%",
+                  objectFit:"cover", flexShrink:0,
+                  border:"2px solid var(--primary)"
+                }}/>
             ) : (
               <div className="user-avatar">
                 {utilisateur?.nom?.[0]?.toUpperCase()}
-          </div>
+              </div>
             )}
             {!reduit && (
               <div className="user-info">
@@ -126,21 +137,53 @@ export default function Layout() {
               </div>
             )}
             <button className="btn-logout"
-              onClick={()=>{deconnecter();navigate("/login");}} title="Déconnexion">
-              <LogOut size={15}/>
+              onClick={() => { deconnecter(); navigate("/login"); }}
+              title="Déconnexion">
+              <LogOut size={14}/>
             </button>
           </div>
         </div>
       </aside>
 
+      {/* ══ CONTENU ══ */}
       <main className="main">
-        {/* Header fixe en haut à droite */}
-        <div className="app-topbar">
-          <NavLink to="/notifications" className="notif-topbar-btn" title="Notifications">
-            <Bell size={18}/>
-          </NavLink>
-          <SelecteurTheme/>
+
+      {/* Topbar */}
+      <div className="app-topbar">
+        {/* Bouton réduire — à gauche de la date */}
+        <div style={{display:"flex", alignItems:"center", gap:"12px"}}>
+          <button
+            className="topbar-toggle-btn"
+            onClick={() => setReduit(!reduit)}
+            title={reduit ? "Agrandir" : "Réduire"}>
+            <Menu size={18}/>
+          </button>
+          <div className="topbar-date">{dateStr}</div>
         </div>
+
+        <div className="topbar-right">
+          {/* Bouton thème — bascule entre Clair et Sombre */}
+          <button
+            className="theme-toggle-pill"
+            onClick={() => setTheme(theme === "lumiere" ? "emeraude" : "lumiere")}
+            title="Changer le thème">
+            {theme === "lumiere"
+              ? <><Sun size={14}/><span>Clair</span></>
+              : <><Leaf size={14}/><span>Sombre</span></>
+            }
+          </button>
+
+    {/* Notifications */}
+    <NavLink to="/notifications"
+      className={({isActive}) =>
+        `notif-topbar-btn ${isActive?"actif":""}`}
+      title="Notifications">
+      <Bell size={16}/>
+    </NavLink>
+  </div>
+</div>
+
+        {/* Contenu des pages */}
         <div className="main-inner">
           <Outlet/>
         </div>
