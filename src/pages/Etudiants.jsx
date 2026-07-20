@@ -9,7 +9,7 @@ import { useAuth } from "../context/AuthContext";
 import {
   Plus, Search, Pencil, Trash2, Eye, X, ChevronRight,
   User, Phone, Mail, BookOpen, CreditCard, QrCode,
-  GraduationCap, Users, Download, Camera
+  GraduationCap, Users, Download, Camera, Grid, List  
 } from "lucide-react";
 import api from "../api/client";
 
@@ -108,6 +108,39 @@ function FormulaireEtudiant({ etudiant, specialites, onSuccess, onFermer }) {
   );
 }
 
+// ── Modification QR Code ─────────────────────────────────────
+function BoutonStatutQR({ idQrcode, statutActuel, onSuccess }) {
+  const [charge, setCharge] = useState(false);
+  const estActif = statutActuel === "ACTIF";
+
+  const basculer = async () => {
+    const nouveau = estActif ? "SUSPENDU" : "ACTIF";
+    setCharge(true);
+    try {
+      const res = await api.post(
+        `/qrcodes/changer-statut/${idQrcode}`,
+        { statut: nouveau, raison: "Modification manuelle" }
+      );
+      onSuccess(nouveau);
+      console.log("OK :", res.data.message);
+    } catch (e) {
+      alert("Erreur : " + (e.response?.data?.detail || "Serveur inaccessible"));
+    } finally {
+      setCharge(false);
+    }
+  };
+
+  return (
+    <button
+      className={`btn btn-sm ${estActif ? "btn-danger" : "btn-success"}`}
+      onClick={basculer}
+      disabled={charge}>
+      {charge ? "..." : estActif ? "Suspendre" : "Réactiver"}
+    </button>
+  );
+}
+
+
 // ── Fiche détail étudiant ─────────────────────────────────────
 function FicheEtudiant({ etudiant, specialites, onModifier, onSupprimer, onFermer, peutModifier, peutSupprimer, onPhotoMaj }) {
   const [onglet, setOnglet]   = useState("infos");
@@ -118,6 +151,16 @@ function FicheEtudiant({ etudiant, specialites, onModifier, onSupprimer, onFerme
   const [loadPai, setLoadPai] = useState(false);
   const [loadQr, setLoadQr]   = useState(false);
   const photoRef              = useRef(null);
+  const [statutQR, setStatutQR] = useState("INACTIF");
+  const { aLeRole } = useAuth();
+
+
+  useEffect(() => {
+    if (qrInfo?.statut) {
+      const s = qrInfo.statut?.value || qrInfo.statut || "INACTIF";
+      setStatutQR(s.toUpperCase());
+    }
+  }, [qrInfo]);
 
   const uploaderPhoto = async (e) => {
     const f = e.target.files[0]; if (!f) return;
@@ -140,13 +183,18 @@ function FicheEtudiant({ etudiant, specialites, onModifier, onSupprimer, onFerme
     if (onglet === "qrcode" && !qrSrc) {
       setLoadQr(true);
       Promise.all([
-        api.get(`/etudiants/${etudiant.id_etudiant}/qr-code`),
-        api.get(`/etudiants/${etudiant.id_etudiant}/qr-code/image`, { responseType:"blob" })
+        api.get(`/etudiants/${etudiant.id_etudiant}/qr-code`)
+          .catch(() => ({ data: null })),
+        api.get(`/etudiants/${etudiant.id_etudiant}/qr-code/image`, {
+          responseType: "blob"
+        }).catch(() => ({ data: null })),
       ]).then(([info, img]) => {
-        setQrInfo(info.data);
-        setQrSrc(URL.createObjectURL(img.data));
-      }).catch(() => {}).finally(() => setLoadQr(false));
+        if (info.data) setQrInfo(info.data);
+        if (img.data)  setQrSrc(URL.createObjectURL(img.data));
+      }).finally(() => setLoadQr(false));
     }
+
+    console.log("qrInfo complet :", qrInfo);
   }, [onglet]);
 
   const telechargerQR = () => {
@@ -299,28 +347,116 @@ function FicheEtudiant({ etudiant, specialites, onModifier, onSupprimer, onFerme
             )
           )}
 
-          {/* ── QR CODE ── */}
           {onglet === "qrcode" && (
-            loadQr ? <div className="loading-text">Chargement du QR code...</div> :
-            !qrSrc ? (
-              <div className="empty-state"><QrCode size={36} style={{marginBottom:8}}/><br/>Aucun QR code disponible<br/><small>Généré automatiquement après paiement d'une tranche</small></div>
-            ) : (
-              <div style={{textAlign:"center"}}>
-                {qrInfo?.statut && <span className={`badge badge--${qrInfo.statut==="ACTIF"?"vert":"rouge"}`} style={{marginBottom:"1rem",display:"inline-block"}}>{qrInfo.statut}</span>}
-                <div className="qr-img-wrap" style={{margin:"0 auto 1.25rem"}}>
-                  <img src={qrSrc} alt="QR" style={{width:200,height:200,imageRendering:"pixelated",display:"block"}}/>
-                </div>
-                <button className="btn btn-primary" onClick={telechargerQR}>
-                  <Download size={14}/> Télécharger PNG
-                </button>
-              </div>
-            )
+            loadQr
+              ? <div className="loading-text">Chargement du QR code...</div>
+              : !qrSrc
+                ? (
+                  <div className="empty-state">
+                    <QrCode size={36} style={{marginBottom:8}}/>
+                    <br/>Aucun QR code disponible
+                    <br/><small>Généré automatiquement après paiement d'une tranche</small>
+                  </div>
+                ) : (
+                  <div style={{textAlign:"center"}}>
+
+                    {/* Badge statut */}
+                    <div style={{marginBottom:"0.75rem"}}>
+                      <span className={`badge ${
+                        statutQR === "ACTIF"    ? "badge--vert"   :
+                        statutQR === "SUSPENDU" ? "badge--orange" :
+                        "badge--rouge"
+                      }`}>
+                        {statutQR === "ACTIF"    ? "● ACTIF"    :
+                        statutQR === "SUSPENDU" ? "● SUSPENDU" :
+                        "● EXPIRÉ"}
+                      </span>
+                    </div>
+
+                    {/* Image QR */}
+                    <div className="qr-img-wrap" style={{margin:"0 auto 1.25rem"}}>
+                      <img
+                        src={qrSrc}
+                        alt="QR Code"
+                        style={{
+                          width:200, height:200,
+                          imageRendering:"pixelated",
+                          display:"block", margin:"0 auto"
+                        }}
+                      />
+                    </div>
+
+                    {/* Actions */}
+                    <div style={{
+                      display:"flex", gap:"0.75rem",
+                      justifyContent:"center", flexWrap:"wrap",
+                      marginTop:"0.5rem"
+                    }}>
+
+                      {/* Bouton statut — Admin et Secrétaire */}
+                      {(aLeRole("ADMIN") || aLeRole("SECRETAIRE")) && qrInfo?.id_qrcode && (
+                        <BoutonStatutQR
+                          idQrcode     = {qrInfo.id_qrcode}
+                          statutActuel = {statutQR}
+                          onSuccess    = {(nouveau) => setStatutQR(nouveau)}
+                        />
+                      )}
+
+                      {/* Bouton télécharger */}
+                      <button className="btn btn-primary" onClick={telechargerQR}>
+                        <Download size={14}/> Télécharger PNG
+                      </button>
+
+                    </div>
+                  </div>
+                )
           )}
         </div>
       </div>
     </div>
   );
 }
+
+
+// ── Carte Étudiant (vue mosaïque) ─────────────────────────────
+function EtudiantCard({ e, peutModifier, peutSupprimer, onVoir, onModifier, onSupprimer }) {
+  return (
+    <div className="etudiant-card" onClick={() => onVoir(e)}>
+      <div className="ec-top">
+        {e.photo ? (
+          <img className="ec-photo" src={e.photo} alt={`${e.nom} ${e.prenom}`} />
+        ) : (
+          <div className="ec-avatar">{e.prenom?.[0]}{e.nom?.[0]}</div>
+        )}
+        <div className="ec-info">
+          <div className="ec-name">{e.nom} {e.prenom}</div>
+          <div className="ec-sub">{e.code_specialite} · N{e.niveau}</div>
+        </div>
+      </div>
+      <div className="ec-middle">
+        <div className="ec-matricule"><code>{e.matricule}</code></div>
+        <div className="ec-contact">{e.telephone_etudiant || e.telephone_parent || "—"}</div>
+      </div>
+      <div className="ec-actions" onClick={ev => ev.stopPropagation()}>
+        <button className="icon-btn" title="Voir" onClick={() => onVoir(e)}>
+          <Eye size={14}/>
+        </button>
+        {peutModifier && (
+          <button className="icon-btn" title="Modifier" onClick={() => onModifier(e)}>
+            <Pencil size={14}/>
+          </button>
+        )}
+        {peutSupprimer && (
+          <button className="icon-btn danger" title="Supprimer" onClick={() => onSupprimer(e)}>
+            <Trash2 size={14}/>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
 
 // ── Page principale ───────────────────────────────────────────
 export default function Etudiants() {
@@ -331,6 +467,9 @@ export default function Etudiants() {
   const [modal, setModal]           = useState(null); // null | "creer" | "modifier"
   const [fiche, setFiche]           = useState(null);
   const [courant, setCourant]       = useState(null);
+
+  const [vueMode, setVueMode] = useState("tableau"); // "tableau" ou "mosaique"
+
   const { aLeRole }                 = useAuth();
   const peutModifier = aLeRole("ADMIN","SECRETAIRE");
   const peutSupprimer = aLeRole("ADMIN");
@@ -384,74 +523,110 @@ export default function Etudiants() {
           <input placeholder="Rechercher par nom, matricule, spécialité..."
             value={recherche} onChange={e => setRecherche(e.target.value)} />
         </div>
+        
+        {/* Boutons de basculement vue */}
+        <div className="view-toggle">
+          <button 
+            className={`toggle-btn ${vueMode === "tableau" ? "active" : ""}`}
+            onClick={() => setVueMode("tableau")}
+            title="Vue tableau">
+            <List size={16} />
+          </button>
+          <button 
+            className={`toggle-btn ${vueMode === "mosaique" ? "active" : ""}`}
+            onClick={() => setVueMode("mosaique")}
+            title="Vue mosaïque">
+            <Grid size={16} />
+          </button>
+        </div>
       </div>
 
-      {load ? <div className="loading-text">Chargement...</div> : (
-        <div className="table-wrap">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Étudiant</th><th>Matricule</th><th>Spécialité</th>
-                <th>Niveau</th><th>Contact</th><th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtres.length === 0 ? (
-                <tr><td colSpan={6} className="table-empty">Aucun étudiant trouvé</td></tr>
-              ) : filtres.map(e => (
-                <tr key={e.id_etudiant} className="clickable-row"
-                  onClick={() => setFiche(e)} style={{cursor:"pointer"}}>
-                  <td>
-                    <div className="table-user">
-                      {e.photo ? (
-                        <img
-                          src={e.photo}
-                          alt={e.nom}
-                          style={{
-                            width: 34, height: 34, borderRadius: "50%",
-                            objectFit: "cover", flexShrink: 0,
-                            border: "1.5px solid var(--border)"
-                          }}
-                        />
-                      ) : (
-                        <div className="table-avatar">
-                          {e.prenom?.[0]}{e.nom?.[0]}
-                        </div>
-                      )}
-                      <div>
-                        <div className="table-name">{e.nom} {e.prenom}</div>
-                        <div className="table-sub">{e.sexe === "M" ? "Masculin" : "Féminin"}</div>
+
+      {load ? (
+      <div className="loading-text">Chargement...</div>
+    ) : filtres.length === 0 ? (
+      <div className="empty-state">Aucun étudiant trouvé</div>
+    ) : vueMode === "mosaique" ? (
+      // ── VUE MOSAÏQUE ──
+      <div className="grid-wrap">
+        {filtres.map(e => (
+          <EtudiantCard
+            key={e.id_etudiant}
+            e={e}
+            peutModifier={peutModifier}
+            peutSupprimer={peutSupprimer}
+            onVoir={(ev) => setFiche(ev)}
+            onModifier={(ev) => { setCourant(ev); setModal("modifier"); }}
+            onSupprimer={(ev) => supprimer(ev)}
+          />
+        ))}
+      </div>
+    ) : (
+      // ── VUE TABLEAU ──
+      <div className="table-wrap">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Étudiant</th><th>Matricule</th><th>Spécialité</th>
+              <th>Niveau</th><th>Contact</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtres.map(e => (
+              <tr key={e.id_etudiant} className="clickable-row"
+                onClick={() => setFiche(e)} style={{cursor:"pointer"}}>
+                <td>
+                  <div className="table-user">
+                    {e.photo ? (
+                      <img
+                        src={e.photo}
+                        alt={e.nom}
+                        style={{
+                          width: 34, height: 34, borderRadius: "50%",
+                          objectFit: "cover", flexShrink: 0,
+                          border: "1.5px solid var(--border)"
+                        }}
+                      />
+                    ) : (
+                      <div className="table-avatar">
+                        {e.prenom?.[0]}{e.nom?.[0]}
                       </div>
+                    )}
+                    <div>
+                      <div className="table-name">{e.nom} {e.prenom}</div>
+                      <div className="table-sub">{e.sexe === "M" ? "Masculin" : "Féminin"}</div>
                     </div>
-                  </td>
-                  <td><code>{e.matricule}</code></td>
-                  <td>{e.code_specialite}</td>
-                  <td>N{e.niveau}</td>
-                  <td>{e.telephone_etudiant || e.telephone_parent || "—"}</td>
-                  <td onClick={ev => ev.stopPropagation()}>
-                    <div className="actions">
-                      <button className="icon-btn" title="Voir la fiche" onClick={() => setFiche(e)}>
-                        <Eye size={15}/>
+                  </div>
+                </td>
+                <td><code>{e.matricule}</code></td>
+                <td>{e.code_specialite}</td>
+                <td>N{e.niveau}</td>
+                <td>{e.telephone_etudiant || e.telephone_parent || "—"}</td>
+                <td onClick={ev => ev.stopPropagation()}>
+                  <div className="actions">
+                    <button className="icon-btn" title="Voir la fiche" onClick={() => setFiche(e)}>
+                      <Eye size={15}/>
+                    </button>
+                    {peutModifier && (
+                      <button className="icon-btn" title="Modifier"
+                        onClick={() => { setCourant(e); setModal("modifier"); }}>
+                        <Pencil size={15}/>
                       </button>
-                      {peutModifier && (
-                        <button className="icon-btn" title="Modifier"
-                          onClick={() => { setCourant(e); setModal("modifier"); }}>
-                          <Pencil size={15}/>
-                        </button>
-                      )}
-                      {peutSupprimer && (
-                        <button className="icon-btn danger" title="Supprimer" onClick={() => supprimer(e)}>
-                          <Trash2 size={15}/>
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+                    )}
+                    {peutSupprimer && (
+                      <button className="icon-btn danger" title="Supprimer" onClick={() => supprimer(e)}>
+                        <Trash2 size={15}/>
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+
 
       {/* Fiche détail */}
       {fiche && (
