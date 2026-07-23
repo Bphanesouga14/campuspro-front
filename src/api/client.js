@@ -15,7 +15,8 @@
 import axios from "axios";
 
 // URL de ton backend FastAPI — à changer si tu déploies ailleurs
-const BASE_URL = "http://127.0.0.1:8000/api/v1";
+//const BASE_URL = "http://127.0.0.1:8000/api/v1";
+const BASE_URL = "https://campuspro-backend.onrender.com/api/v1";
 
 // Création de l'instance axios avec l'URL de base
 const api = axios.create({
