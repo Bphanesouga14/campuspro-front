@@ -93,7 +93,7 @@ export const etudiantService = {
   },
 
   // URL de l'image QR code (utilisable dans <img src=...>)
-  qrCodeUrl: (id) => `http://127.0.0.1:8000/api/v1/etudiants/${id}/qr-code/image`,
+  qrCodeUrl: (id) => `https://campuspro-backend.onrender.com/api/v1/etudiants/${id}/qr-code/image`,
 };
 
 // ── PAIEMENTS ────────────────────────────────────────────────

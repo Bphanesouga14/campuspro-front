@@ -61,7 +61,8 @@ export default function Login() {
     e.preventDefault();
     setErreur(""); setLoad(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/auth/login", {
+      //const res = await fetch("http://127.0.0.1:8000/api/v1/auth/login",
+      const res = await fetch("https://campuspro-backend.onrender.com/api/v1/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, mot_de_passe: mdp }),
@@ -81,7 +82,8 @@ export default function Login() {
     e.preventDefault();
     setErreur(""); setLoad(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/auth/verifier", {
+      //const res = await fetch("http://127.0.0.1:8000/api/v1/auth/verifier",
+      const res = await fetch("https://campuspro-backend.onrender.com/api/v1/auth/verifier", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: emailSaisi, code }),

@@ -136,7 +136,7 @@ function PanelPaiements({ etudiant, onPayer, peutPayer }) {
     
     // Utiliser fetch directement avec le token
     const res = await fetch(
-      `http://127.0.0.1:8000/api/v1/paiements/${idPaiement}/recu`,
+      `https://campuspro-backend.onrender.com/api/v1/paiements/${idPaiement}/recu`,
       {
         method: "GET",
         headers: {

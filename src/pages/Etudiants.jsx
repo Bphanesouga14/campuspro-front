@@ -244,7 +244,7 @@ function FicheEtudiant({ etudiant, specialites, onModifier, onSupprimer, onFerme
                 onClick={async () => {
                   const token = localStorage.getItem("token");
                   const res   = await fetch(
-                    `http://127.0.0.1:8000/api/v1/etudiants/${etudiant.id_etudiant}/carte`,
+                    `https://campuspro-backend.onrender.com/api/v1/etudiants/${etudiant.id_etudiant}/carte`,
                     { headers:{ "Authorization":`Bearer ${token}` } }
                   );
                   if (!res.ok) { alert("Erreur génération carte."); return; }
